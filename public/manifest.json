@@ -1,0 +1,18 @@
+{
+  "name": "SurvivaTrack - Layoff Runway & Financial Survival App",
+  "short_name": "SurvivaTrack",
+  "description": "Offline Layoff Runway & Financial Survival Calculator for Job Seekers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

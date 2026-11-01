@@ -1,0 +1,563 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { 
+  BankAccount, 
+  MoneyLent, 
+  DebtLoan, 
+  MonthlyBudgetDeclaration, 
+  BudgetCategory, 
+  DailyExpense,
+  SurvivalAnalysis 
+} from '../types';
+import { useAuth } from './AuthContext';
+
+interface AppContextType {
+  // Accounts
+  accounts: BankAccount[];
+  addAccount: (acc: Omit<BankAccount, 'id' | 'updatedAt'>) => void;
+  updateAccount: (id: string, acc: Partial<BankAccount>) => void;
+  deleteAccount: (id: string) => void;
+
+  // Money Lent (Receivables)
+  moneyLent: MoneyLent[];
+  addMoneyLent: (item: Omit<MoneyLent, 'id' | 'remainingAmount' | 'status'>) => void;
+  recordLentRepayment: (id: string, amount: number) => void;
+  updateMoneyLent: (id: string, item: Partial<MoneyLent>) => void;
+  deleteMoneyLent: (id: string) => void;
+
+  // Debts & Loans (Payables)
+  debts: DebtLoan[];
+  addDebt: (item: Omit<DebtLoan, 'id' | 'remainingAmount' | 'status'>) => void;
+  recordDebtPayment: (id: string, amount: number) => void;
+  updateDebt: (id: string, item: Partial<DebtLoan>) => void;
+  deleteDebt: (id: string) => void;
+
+  // Monthly Budget Declarations
+  selectedMonth: string; // YYYY-MM
+  setSelectedMonth: (month: string) => void;
+  getBudgetForMonth: (monthKey: string) => MonthlyBudgetDeclaration;
+  saveMonthBudget: (monthKey: string, categories: BudgetCategory[]) => void;
+  copyBudgetFromPreviousMonth: (targetMonthKey: string) => void;
+
+  // Daily Expenses
+  dailyExpenses: DailyExpense[];
+  addDailyExpense: (exp: Omit<DailyExpense, 'id' | 'createdAt'>, deductFromAccount?: boolean) => void;
+  deleteDailyExpense: (id: string) => void;
+
+  // Computed Survival Analysis
+  survivalAnalysis: SurvivalAnalysis;
+
+  // Reset / Sample Data
+  resetToSampleData: () => void;
+  clearAllData: () => void;
+
+  // 100% Offline Backup & Restore
+  exportBackupJSON: () => void;
+  importBackupJSON: (jsonString: string) => boolean;
+}
+
+const AppContext = createContext<AppContextType | undefined>(undefined);
+
+export const DEFAULT_BUDGET_CATEGORIES: BudgetCategory[] = [
+  { id: 'cat-rent', name: 'House / Apartment Rent', budgetedAmount: 12000, isEssential: true, icon: 'Home' },
+  { id: 'cat-emi', name: 'Loan & Vehicle EMI', budgetedAmount: 5000, isEssential: true, icon: 'CreditCard' },
+  { id: 'cat-grocery', name: 'Food & Groceries', budgetedAmount: 7000, isEssential: true, icon: 'ShoppingBag' },
+  { id: 'cat-gas', name: 'LPG Gas / Cooking Fuel', budgetedAmount: 1000, isEssential: true, icon: 'Flame' },
+  { id: 'cat-water', name: 'Water & Utilities', budgetedAmount: 400, isEssential: true, icon: 'Droplets' },
+  { id: 'cat-electric', name: 'Electricity Bill', budgetedAmount: 1500, isEssential: true, icon: 'Zap' },
+  { id: 'cat-recharge', name: 'Mobile & Wi-Fi Recharge', budgetedAmount: 899, isEssential: true, icon: 'Wifi' },
+  { id: 'cat-daily', name: 'Daily Essentials & Dairy', budgetedAmount: 2500, isEssential: true, icon: 'Coffee' },
+  { id: 'cat-medical', name: 'Healthcare & Medicines', budgetedAmount: 1500, isEssential: true, icon: 'HeartPulse' },
+  { id: 'cat-misc', name: 'Emergency & Miscellaneous', budgetedAmount: 2000, isEssential: false, icon: 'MoreHorizontal' },
+  { id: 'cat-out', name: 'Dining Out & Entertainment (Discretionary)', budgetedAmount: 1500, isEssential: false, icon: 'Film' },
+];
+
+const getCurrentMonthKey = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+};
+
+const getSampleAccounts = (): BankAccount[] => [
+  { id: 'acc-1', bankName: 'PNB (Savings Account)', accountType: 'savings', accountNumberLast4: '4589', balance: 65000, color: 'border-yellow-500', updatedAt: new Date().toISOString() },
+  { id: 'acc-2', bankName: 'HDFC Bank (Salary Account)', accountType: 'salary', accountNumberLast4: '1024', balance: 145000, color: 'border-blue-500', updatedAt: new Date().toISOString() },
+  { id: 'acc-3', bankName: 'Cash in Hand (Liquid Reserve)', accountType: 'cash', balance: 18000, color: 'border-emerald-500', updatedAt: new Date().toISOString() },
+];
+
+const getSampleMoneyLent = (): MoneyLent[] => [
+  {
+    id: 'lent-1',
+    borrowerName: 'Ramesh (College Friend)',
+    totalAmount: 25000,
+    amountReceived: 10000,
+    remainingAmount: 15000,
+    lentDate: '2026-08-15',
+    expectedReturnDate: '2026-11-20',
+    phone: '9876543210',
+    notes: 'Lent for emergency medical expenses, promised to return in November',
+    status: 'partially_settled'
+  },
+  {
+    id: 'lent-2',
+    borrowerName: 'Sunil Sharma (Former Colleague)',
+    totalAmount: 8000,
+    amountReceived: 0,
+    remainingAmount: 8000,
+    lentDate: '2026-09-02',
+    expectedReturnDate: '2026-11-30',
+    notes: 'Laptop repair loan',
+    status: 'active'
+  }
+];
+
+const getSampleDebts = (): DebtLoan[] => [
+  {
+    id: 'debt-1',
+    lenderName: 'HDFC Two-Wheeler / Bike Loan',
+    type: 'car_bike_loan',
+    totalAmount: 75000,
+    amountRepaid: 45000,
+    remainingAmount: 30000,
+    monthlyEMI: 3500,
+    dueDay: 5,
+    notes: 'EMI deducted on 5th of every month',
+    status: 'active'
+  },
+  {
+    id: 'debt-2',
+    lenderName: 'Uncle / Family Loan',
+    type: 'borrowed_friend_family',
+    totalAmount: 20000,
+    amountRepaid: 5000,
+    remainingAmount: 15000,
+    dueDay: 1,
+    notes: 'To be repaid as soon as new job offer arrives',
+    status: 'active'
+  }
+];
+
+const getSampleExpenses = (): DailyExpense[] => [
+  {
+    id: 'exp-1',
+    date: new Date().toISOString().split('T')[0],
+    categoryId: 'cat-grocery',
+    categoryName: 'Food & Groceries',
+    amount: 1450,
+    title: 'Vegetables, Grains & Flour',
+    bankAccountId: 'acc-2',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'exp-2',
+    date: new Date().toISOString().split('T')[0],
+    categoryId: 'cat-gas',
+    categoryName: 'LPG Gas / Cooking Fuel',
+    amount: 980,
+    title: 'Indane LPG Refill',
+    bankAccountId: 'acc-1',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'exp-3',
+    date: new Date().toISOString().split('T')[0],
+    categoryId: 'cat-recharge',
+    categoryName: 'Mobile & Wi-Fi Recharge',
+    amount: 349,
+    title: 'Jio 28-Day Data Plan',
+    bankAccountId: 'acc-2',
+    createdAt: new Date().toISOString()
+  }
+];
+
+export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
+  const storagePrefix = user ? `surviva_${user.uid}_` : 'surviva_guest_';
+
+  const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
+
+  // State
+  const [accounts, setAccounts] = useState<BankAccount[]>(() => {
+    const saved = localStorage.getItem(`${storagePrefix}accounts`);
+    return saved ? JSON.parse(saved) : getSampleAccounts();
+  });
+
+  const [moneyLent, setMoneyLent] = useState<MoneyLent[]>(() => {
+    const saved = localStorage.getItem(`${storagePrefix}money_lent`);
+    return saved ? JSON.parse(saved) : getSampleMoneyLent();
+  });
+
+  const [debts, setDebts] = useState<DebtLoan[]>(() => {
+    const saved = localStorage.getItem(`${storagePrefix}debts`);
+    return saved ? JSON.parse(saved) : getSampleDebts();
+  });
+
+  const [monthlyBudgets, setMonthlyBudgets] = useState<Record<string, MonthlyBudgetDeclaration>>(() => {
+    const saved = localStorage.getItem(`${storagePrefix}budgets`);
+    if (saved) return JSON.parse(saved);
+    const currKey = getCurrentMonthKey();
+    const sum = DEFAULT_BUDGET_CATEGORIES.reduce((acc, c) => acc + c.budgetedAmount, 0);
+    return {
+      [currKey]: {
+        id: `budget-${currKey}`,
+        monthYear: currKey,
+        categories: DEFAULT_BUDGET_CATEGORIES,
+        totalBudgeted: sum,
+        updatedAt: new Date().toISOString()
+      }
+    };
+  });
+
+  const [dailyExpenses, setDailyExpenses] = useState<DailyExpense[]>(() => {
+    const saved = localStorage.getItem(`${storagePrefix}expenses`);
+    return saved ? JSON.parse(saved) : getSampleExpenses();
+  });
+
+  // Local Storage persistence - guarantees 100% offline functionality
+  useEffect(() => {
+    localStorage.setItem(`${storagePrefix}accounts`, JSON.stringify(accounts));
+  }, [accounts, storagePrefix]);
+
+  useEffect(() => {
+    localStorage.setItem(`${storagePrefix}money_lent`, JSON.stringify(moneyLent));
+  }, [moneyLent, storagePrefix]);
+
+  useEffect(() => {
+    localStorage.setItem(`${storagePrefix}debts`, JSON.stringify(debts));
+  }, [debts, storagePrefix]);
+
+  useEffect(() => {
+    localStorage.setItem(`${storagePrefix}budgets`, JSON.stringify(monthlyBudgets));
+  }, [monthlyBudgets, storagePrefix]);
+
+  useEffect(() => {
+    localStorage.setItem(`${storagePrefix}expenses`, JSON.stringify(dailyExpenses));
+  }, [dailyExpenses, storagePrefix]);
+
+  // Accounts Operations
+  const addAccount = (acc: Omit<BankAccount, 'id' | 'updatedAt'>) => {
+    const newAcc: BankAccount = {
+      ...acc,
+      id: 'acc-' + Date.now(),
+      updatedAt: new Date().toISOString()
+    };
+    setAccounts(prev => [...prev, newAcc]);
+  };
+
+  const updateAccount = (id: string, updated: Partial<BankAccount>) => {
+    setAccounts(prev => prev.map(a => a.id === id ? { ...a, ...updated, updatedAt: new Date().toISOString() } : a));
+  };
+
+  const deleteAccount = (id: string) => {
+    setAccounts(prev => prev.filter(a => a.id !== id));
+  };
+
+  // Money Lent Operations
+  const addMoneyLent = (item: Omit<MoneyLent, 'id' | 'remainingAmount' | 'status'>) => {
+    const remaining = Math.max(0, item.totalAmount - (item.amountReceived || 0));
+    const status = remaining === 0 ? 'fully_settled' : item.amountReceived > 0 ? 'partially_settled' : 'active';
+    const newItem: MoneyLent = {
+      ...item,
+      id: 'lent-' + Date.now(),
+      remainingAmount: remaining,
+      status
+    };
+    setMoneyLent(prev => [newItem, ...prev]);
+  };
+
+  const recordLentRepayment = (id: string, amount: number) => {
+    setMoneyLent(prev => prev.map(item => {
+      if (item.id !== id) return item;
+      const newReceived = item.amountReceived + amount;
+      const newRemaining = Math.max(0, item.totalAmount - newReceived);
+      const newStatus = newRemaining === 0 ? 'fully_settled' : 'partially_settled';
+      return {
+        ...item,
+        amountReceived: newReceived,
+        remainingAmount: newRemaining,
+        status: newStatus
+      };
+    }));
+  };
+
+  const updateMoneyLent = (id: string, item: Partial<MoneyLent>) => {
+    setMoneyLent(prev => prev.map(m => {
+      if (m.id !== id) return m;
+      const total = item.totalAmount !== undefined ? item.totalAmount : m.totalAmount;
+      const received = item.amountReceived !== undefined ? item.amountReceived : m.amountReceived;
+      const remaining = Math.max(0, total - received);
+      const status = remaining === 0 ? 'fully_settled' : received > 0 ? 'partially_settled' : 'active';
+      return { ...m, ...item, remainingAmount: remaining, status };
+    }));
+  };
+
+  const deleteMoneyLent = (id: string) => {
+    setMoneyLent(prev => prev.filter(m => m.id !== id));
+  };
+
+  // Debts & Loans Operations
+  const addDebt = (item: Omit<DebtLoan, 'id' | 'remainingAmount' | 'status'>) => {
+    const remaining = Math.max(0, item.totalAmount - (item.amountRepaid || 0));
+    const status = remaining === 0 ? 'closed' : 'active';
+    const newItem: DebtLoan = {
+      ...item,
+      id: 'debt-' + Date.now(),
+      remainingAmount: remaining,
+      status
+    };
+    setDebts(prev => [newItem, ...prev]);
+  };
+
+  const recordDebtPayment = (id: string, amount: number) => {
+    setDebts(prev => prev.map(item => {
+      if (item.id !== id) return item;
+      const newRepaid = item.amountRepaid + amount;
+      const newRemaining = Math.max(0, item.totalAmount - newRepaid);
+      return {
+        ...item,
+        amountRepaid: newRepaid,
+        remainingAmount: newRemaining,
+        status: newRemaining === 0 ? 'closed' : 'active'
+      };
+    }));
+  };
+
+  const updateDebt = (id: string, item: Partial<DebtLoan>) => {
+    setDebts(prev => prev.map(d => {
+      if (d.id !== id) return d;
+      const total = item.totalAmount !== undefined ? item.totalAmount : d.totalAmount;
+      const repaid = item.amountRepaid !== undefined ? item.amountRepaid : d.amountRepaid;
+      const remaining = Math.max(0, total - repaid);
+      return { ...d, ...item, remainingAmount: remaining, status: remaining === 0 ? 'closed' : 'active' };
+    }));
+  };
+
+  const deleteDebt = (id: string) => {
+    setDebts(prev => prev.filter(d => d.id !== id));
+  };
+
+  // Monthly Budget Operations (Inherit from previous month without mutating past records)
+  const getBudgetForMonth = (monthKey: string): MonthlyBudgetDeclaration => {
+    if (monthlyBudgets[monthKey]) {
+      return monthlyBudgets[monthKey];
+    }
+
+    const sortedMonths = Object.keys(monthlyBudgets).sort();
+    const priorMonths = sortedMonths.filter(m => m < monthKey);
+
+    let baseCategories: BudgetCategory[] = DEFAULT_BUDGET_CATEGORIES;
+    if (priorMonths.length > 0) {
+      const latestPrior = priorMonths[priorMonths.length - 1];
+      baseCategories = monthlyBudgets[latestPrior].categories.map(c => ({ ...c }));
+    }
+
+    const total = baseCategories.reduce((acc, c) => acc + c.budgetedAmount, 0);
+    return {
+      id: `budget-${monthKey}`,
+      monthYear: monthKey,
+      categories: baseCategories,
+      totalBudgeted: total,
+      updatedAt: new Date().toISOString()
+    };
+  };
+
+  const saveMonthBudget = (monthKey: string, categories: BudgetCategory[]) => {
+    const total = categories.reduce((sum, c) => sum + (Number(c.budgetedAmount) || 0), 0);
+    setMonthlyBudgets(prev => ({
+      ...prev,
+      [monthKey]: {
+        id: `budget-${monthKey}`,
+        monthYear: monthKey,
+        categories,
+        totalBudgeted: total,
+        updatedAt: new Date().toISOString()
+      }
+    }));
+  };
+
+  const copyBudgetFromPreviousMonth = (targetMonthKey: string) => {
+    const sortedMonths = Object.keys(monthlyBudgets).sort();
+    const priorMonths = sortedMonths.filter(m => m < targetMonthKey);
+    if (priorMonths.length > 0) {
+      const latestPrior = priorMonths[priorMonths.length - 1];
+      const clonedCategories = monthlyBudgets[latestPrior].categories.map(c => ({ ...c }));
+      saveMonthBudget(targetMonthKey, clonedCategories);
+    }
+  };
+
+  // Daily Expenses Operations
+  const addDailyExpense = (exp: Omit<DailyExpense, 'id' | 'createdAt'>, deductFromAccount = false) => {
+    const newExp: DailyExpense = {
+      ...exp,
+      id: 'exp-' + Date.now(),
+      createdAt: new Date().toISOString()
+    };
+    setDailyExpenses(prev => [newExp, ...prev]);
+
+    if (deductFromAccount && exp.bankAccountId) {
+      setAccounts(prev => prev.map(a => {
+        if (a.id === exp.bankAccountId) {
+          return { ...a, balance: Math.max(0, a.balance - exp.amount), updatedAt: new Date().toISOString() };
+        }
+        return a;
+      }));
+    }
+  };
+
+  const deleteDailyExpense = (id: string) => {
+    setDailyExpenses(prev => prev.filter(e => e.id !== id));
+  };
+
+  // Core Survival Calculation
+  const currentBudget = getBudgetForMonth(selectedMonth);
+  const totalCapital = accounts.reduce((acc, a) => acc + (Number(a.balance) || 0), 0);
+  const totalReceivables = moneyLent.reduce((acc, m) => acc + (Number(m.remainingAmount) || 0), 0);
+  const totalPayables = debts.reduce((acc, d) => acc + (Number(d.remainingAmount) || 0), 0);
+  const netWorth = totalCapital + totalReceivables - totalPayables;
+
+  const monthlyBurnRate = currentBudget.totalBudgeted || 1;
+  const essentialMonthlyBurnRate = currentBudget.categories
+    .filter(c => c.isEssential)
+    .reduce((sum, c) => sum + (Number(c.budgetedAmount) || 0), 0) || 1;
+
+  const actualSpentThisMonth = dailyExpenses
+    .filter(e => e.date.startsWith(selectedMonth))
+    .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+  const dailyBurn = monthlyBurnRate / 30;
+  const totalDays = dailyBurn > 0 ? Math.floor(totalCapital / dailyBurn) : 0;
+  const months = Math.floor(totalDays / 30);
+  const daysRemainder = totalDays % 30;
+
+  const essentialDailyBurn = essentialMonthlyBurnRate / 30;
+  const essentialTotalDays = essentialDailyBurn > 0 ? Math.floor(totalCapital / essentialDailyBurn) : 0;
+  const essentialMonths = Math.floor(essentialTotalDays / 30);
+  const essentialDaysRemainder = essentialTotalDays % 30;
+
+  const calcRunwayDate = (daysCount: number) => {
+    const target = new Date();
+    target.setDate(target.getDate() + daysCount);
+    return target.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  const survivalAnalysis: SurvivalAnalysis = {
+    totalCapital,
+    totalReceivables,
+    totalPayables,
+    netWorth,
+    monthlyBurnRate,
+    essentialMonthlyBurnRate,
+    actualSpentThisMonth,
+    daysRemaining: daysRemainder,
+    monthsRemaining: months,
+    essentialDaysRemaining: essentialDaysRemainder,
+    essentialMonthsRemaining: essentialMonths,
+    runwayDate: calcRunwayDate(totalDays),
+    runwayDateEssential: calcRunwayDate(essentialTotalDays)
+  };
+
+  const resetToSampleData = () => {
+    setAccounts(getSampleAccounts());
+    setMoneyLent(getSampleMoneyLent());
+    setDebts(getSampleDebts());
+    setDailyExpenses(getSampleExpenses());
+    const curr = getCurrentMonthKey();
+    const sum = DEFAULT_BUDGET_CATEGORIES.reduce((acc, c) => acc + c.budgetedAmount, 0);
+    setMonthlyBudgets({
+      [curr]: {
+        id: `budget-${curr}`,
+        monthYear: curr,
+        categories: DEFAULT_BUDGET_CATEGORIES,
+        totalBudgeted: sum,
+        updatedAt: new Date().toISOString()
+      }
+    });
+  };
+
+  const clearAllData = () => {
+    setAccounts([]);
+    setMoneyLent([]);
+    setDebts([]);
+    setDailyExpenses([]);
+    setMonthlyBudgets({});
+  };
+
+  // Offline Export / Backup
+  const exportBackupJSON = () => {
+    const backupData = {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      userUid: user?.uid || 'offline_user',
+      accounts,
+      moneyLent,
+      debts,
+      monthlyBudgets,
+      dailyExpenses
+    };
+
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `SurvivaTrack_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Offline Import / Restore
+  const importBackupJSON = (jsonString: string): boolean => {
+    try {
+      const data = JSON.parse(jsonString);
+      if (data.accounts) setAccounts(data.accounts);
+      if (data.moneyLent) setMoneyLent(data.moneyLent);
+      if (data.debts) setDebts(data.debts);
+      if (data.monthlyBudgets) setMonthlyBudgets(data.monthlyBudgets);
+      if (data.dailyExpenses) setDailyExpenses(data.dailyExpenses);
+      return true;
+    } catch (err) {
+      console.error('Failed to import backup JSON:', err);
+      return false;
+    }
+  };
+
+  return (
+    <AppContext.Provider value={{
+      accounts,
+      addAccount,
+      updateAccount,
+      deleteAccount,
+      moneyLent,
+      addMoneyLent,
+      recordLentRepayment,
+      updateMoneyLent,
+      deleteMoneyLent,
+      debts,
+      addDebt,
+      recordDebtPayment,
+      updateDebt,
+      deleteDebt,
+      selectedMonth,
+      setSelectedMonth,
+      getBudgetForMonth,
+      saveMonthBudget,
+      copyBudgetFromPreviousMonth,
+      dailyExpenses,
+      addDailyExpense,
+      deleteDailyExpense,
+      survivalAnalysis,
+      resetToSampleData,
+      clearAllData,
+      exportBackupJSON,
+      importBackupJSON
+    }}>
+      {children}
+    </AppContext.Provider>
+  );
+};
+
+export const useApp = () => {
+  const context = useContext(AppContext);
+  if (!context) throw new Error('useApp must be used within AppProvider');
+  return context;
+};
