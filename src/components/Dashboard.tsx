@@ -45,19 +45,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="space-y-6">
       {/* Hero Survival Runway Banner (Soothing, Eye-Friendly Design) */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-50/90 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 border border-indigo-100 dark:border-slate-800 p-6 sm:p-8 shadow-sm">
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-xl">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-50/90 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 border border-indigo-100 dark:border-slate-800 p-4 sm:p-8 shadow-sm w-full max-w-full">
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 min-w-0 w-full">
+          <div className="space-y-3 max-w-xl min-w-0 w-full">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/40 text-xs font-semibold">
-              <Clock className="w-3.5 h-3.5" />
+              <Clock className="w-3.5 h-3.5 shrink-0" />
               <span>Job Search Emergency Runway</span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight break-words">
               You have <span className="text-indigo-600 dark:text-amber-400">{survivalAnalysis.monthsRemaining} months {survivalAnalysis.daysRemaining} days</span> of survival runway left
             </h1>
 
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed break-words">
               Based on your declared monthly burn rate ({formatCurrency(survivalAnalysis.monthlyBurnRate)}/mo), your liquid capital of <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{formatCurrency(survivalAnalysis.totalCapital)}</strong> will last until{' '}
               <span className="font-semibold text-slate-900 dark:text-white underline decoration-indigo-400 dark:decoration-amber-400 underline-offset-4">
                 {survivalAnalysis.runwayDate}
@@ -66,7 +66,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           {/* Quick Metrics Badge Card */}
-          <div className="w-full lg:w-auto bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row lg:flex-col gap-4 min-w-[280px]">
+          <div className="w-full lg:w-auto bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row lg:flex-col gap-4 sm:min-w-[280px]">
             {/* Essential Only Mode */}
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs">

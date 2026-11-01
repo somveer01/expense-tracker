@@ -46,19 +46,19 @@ export const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-200">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-200">
       {/* Offline Status Top Banner */}
       {!isOnline && (
-        <div className="bg-amber-500 text-slate-950 text-xs py-2 px-4 font-bold flex items-center justify-between shadow-lg sticky top-0 z-50">
-          <div className="flex items-center gap-2 mx-auto sm:mx-0">
+        <div className="bg-amber-500 text-slate-950 text-xs py-2 px-3 sm:px-4 font-bold flex items-center justify-between shadow-lg sticky top-0 z-50 w-full max-w-full">
+          <div className="flex items-center gap-2 mx-auto sm:mx-0 min-w-0">
             <WifiOff className="w-4 h-4 shrink-0" />
-            <span>
-              ⚡ Offline Mode Active: All changes are saved securely to your local device memory!
+            <span className="truncate">
+              ⚡ Offline Mode Active: Saved to local storage!
             </span>
           </div>
           <button
             onClick={() => setIsOfflineModalOpen(true)}
-            className="hidden sm:flex items-center gap-1 bg-slate-950 text-amber-300 px-2 py-0.5 rounded text-[11px] font-semibold hover:bg-slate-900 transition"
+            className="hidden sm:flex items-center gap-1 bg-slate-950 text-amber-300 px-2 py-0.5 rounded text-[11px] font-semibold hover:bg-slate-900 transition shrink-0"
           >
             <HardDrive className="w-3 h-3" />
             <span>Backup Data</span>
@@ -77,7 +77,7 @@ export const App: React.FC = () => {
       />
 
       {/* Main App Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-24 sm:pb-12">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 sm:pb-12 min-w-0">
         {activeTab === 'dashboard' && (
           <Dashboard
             setActiveTab={setActiveTab}
