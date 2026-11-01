@@ -17,10 +17,16 @@ interface AccountsManagerProps {
   setIsAddModalOpen?: (open: boolean) => void;
 }
 
-export const AccountsManager: React.FC<AccountsManagerProps> = () => {
+export const AccountsManager: React.FC<AccountsManagerProps> = ({
+  isAddModalOpen: parentAddModalOpen,
+  setIsAddModalOpen: parentSetAddModalOpen
+}) => {
   const { accounts, addAccount, updateAccount, deleteAccount, survivalAnalysis } = useApp();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [internalModalOpen, setInternalModalOpen] = useState(false);
+  const isModalOpen = parentAddModalOpen !== undefined ? parentAddModalOpen : internalModalOpen;
+  const setIsModalOpen = parentSetAddModalOpen || setInternalModalOpen;
+
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
 
   // Form State
@@ -53,23 +59,32 @@ export const AccountsManager: React.FC<AccountsManagerProps> = () => {
     setIsModalOpen(true);
   };
 
+  const parseNumber = (val: any): number => {
+    if (typeof val === 'number') return val;
+    const clean = String(val).replace(/[^0-9.-]+/g, '');
+    const num = parseFloat(clean);
+    return isNaN(num) ? 0 : num;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!bankName.trim() || balance === '') return;
 
+    const parsedBalance = parseNumber(balance);
+
     if (editingAccount) {
       updateAccount(editingAccount.id, {
-        bankName,
+        bankName: bankName.trim(),
         accountType,
-        accountNumberLast4: accountNumberLast4 || undefined,
-        balance: Number(balance)
+        accountNumberLast4: accountNumberLast4.trim() || undefined,
+        balance: parsedBalance
       });
     } else {
       addAccount({
-        bankName,
+        bankName: bankName.trim(),
         accountType,
-        accountNumberLast4: accountNumberLast4 || undefined,
-        balance: Number(balance)
+        accountNumberLast4: accountNumberLast4.trim() || undefined,
+        balance: parsedBalance
       });
     }
 
@@ -78,7 +93,7 @@ export const AccountsManager: React.FC<AccountsManagerProps> = () => {
 
   const handleQuickBalanceSave = (id: string) => {
     if (quickBalance !== '') {
-      updateAccount(id, { balance: Number(quickBalance) });
+      updateAccount(id, { balance: parseNumber(quickBalance) });
     }
     setQuickEditId(null);
   };

@@ -59,28 +59,39 @@ export const DebtsManager: React.FC = () => {
     setIsAddModalOpen(true);
   };
 
+  const parseNum = (v: any) => {
+    const clean = String(v).replace(/[^0-9.-]+/g, '');
+    const n = parseFloat(clean);
+    return isNaN(n) ? 0 : n;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!lenderName.trim() || totalAmount === '') return;
 
+    const parsedTotal = parseNum(totalAmount);
+    const parsedRepaid = parseNum(amountRepaid);
+    const parsedEMI = monthlyEMI !== '' ? parseNum(monthlyEMI) : undefined;
+    const parsedDueDay = dueDay !== '' ? parseNum(dueDay) : undefined;
+
     if (editingItem) {
       updateDebt(editingItem.id, {
-        lenderName,
+        lenderName: lenderName.trim(),
         type,
-        totalAmount: Number(totalAmount),
-        amountRepaid: Number(amountRepaid) || 0,
-        monthlyEMI: monthlyEMI !== '' ? Number(monthlyEMI) : undefined,
-        dueDay: dueDay !== '' ? Number(dueDay) : undefined,
+        totalAmount: parsedTotal,
+        amountRepaid: parsedRepaid,
+        monthlyEMI: parsedEMI,
+        dueDay: parsedDueDay,
         notes: notes || undefined
       });
     } else {
       addDebt({
-        lenderName,
+        lenderName: lenderName.trim(),
         type,
-        totalAmount: Number(totalAmount),
-        amountRepaid: Number(amountRepaid) || 0,
-        monthlyEMI: monthlyEMI !== '' ? Number(monthlyEMI) : undefined,
-        dueDay: dueDay !== '' ? Number(dueDay) : undefined,
+        totalAmount: parsedTotal,
+        amountRepaid: parsedRepaid,
+        monthlyEMI: parsedEMI,
+        dueDay: parsedDueDay,
         notes: notes || undefined
       });
     }
@@ -90,9 +101,10 @@ export const DebtsManager: React.FC = () => {
 
   const handleRecordPayment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!paymentItem || paymentAmount === '' || Number(paymentAmount) <= 0) return;
+    const parsedAmt = parseNum(paymentAmount);
+    if (!paymentItem || parsedAmt <= 0) return;
 
-    recordDebtPayment(paymentItem.id, Number(paymentAmount));
+    recordDebtPayment(paymentItem.id, parsedAmt);
     setPaymentItem(null);
     setPaymentAmount('');
   };

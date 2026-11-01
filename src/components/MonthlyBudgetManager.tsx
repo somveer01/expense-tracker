@@ -49,16 +49,29 @@ export const MonthlyBudgetManager: React.FC = () => {
   const formatCurrency = (amt: number) => '₹' + amt.toLocaleString('en-IN');
 
   const handleAmountChange = (id: string, value: string) => {
-    const num = value === '' ? 0 : Number(value);
-    setCategories(prev => prev.map(c => c.id === id ? { ...c, budgetedAmount: num } : c));
+    const clean = String(value).replace(/[^0-9.-]+/g, '');
+    const num = clean === '' ? 0 : Number(clean);
+    setCategories(prev => {
+      const next = prev.map(c => c.id === id ? { ...c, budgetedAmount: num } : c);
+      saveMonthBudget(selectedMonth, next);
+      return next;
+    });
   };
 
   const handleToggleEssential = (id: string) => {
-    setCategories(prev => prev.map(c => c.id === id ? { ...c, isEssential: !c.isEssential } : c));
+    setCategories(prev => {
+      const next = prev.map(c => c.id === id ? { ...c, isEssential: !c.isEssential } : c);
+      saveMonthBudget(selectedMonth, next);
+      return next;
+    });
   };
 
   const handleDeleteCategory = (id: string) => {
-    setCategories(prev => prev.filter(c => c.id !== id));
+    setCategories(prev => {
+      const next = prev.filter(c => c.id !== id);
+      saveMonthBudget(selectedMonth, next);
+      return next;
+    });
   };
 
   const handleSave = () => {

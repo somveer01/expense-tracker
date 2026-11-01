@@ -169,69 +169,99 @@ const getSampleExpenses = (): DailyExpense[] => [
   }
 ];
 
+// Helper to retrieve saved data across legacy prefixes
+const getStoredItem = <T,>(key: string, fallback: T): T => {
+  try {
+    const val = localStorage.getItem(`surviva_${key}`) || 
+                localStorage.getItem(`surviva_guest_${key}`) || 
+                localStorage.getItem(`surviva_app_${key}`);
+    if (val) {
+      return JSON.parse(val);
+    }
+  } catch (err) {
+    console.warn(`Error reading localStorage for ${key}:`, err);
+  }
+  return fallback;
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const storagePrefix = user ? `surviva_${user.uid}_` : 'surviva_guest_';
-
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
 
-  // State
+  // Unified State with persistent offline storage
   const [accounts, setAccounts] = useState<BankAccount[]>(() => {
-    const saved = localStorage.getItem(`${storagePrefix}accounts`);
-    return saved ? JSON.parse(saved) : getSampleAccounts();
+    return getStoredItem('accounts', getSampleAccounts());
   });
 
   const [moneyLent, setMoneyLent] = useState<MoneyLent[]>(() => {
-    const saved = localStorage.getItem(`${storagePrefix}money_lent`);
-    return saved ? JSON.parse(saved) : getSampleMoneyLent();
+    return getStoredItem('money_lent', getSampleMoneyLent());
   });
 
   const [debts, setDebts] = useState<DebtLoan[]>(() => {
-    const saved = localStorage.getItem(`${storagePrefix}debts`);
-    return saved ? JSON.parse(saved) : getSampleDebts();
+    return getStoredItem('debts', getSampleDebts());
   });
 
   const [monthlyBudgets, setMonthlyBudgets] = useState<Record<string, MonthlyBudgetDeclaration>>(() => {
-    const saved = localStorage.getItem(`${storagePrefix}budgets`);
-    if (saved) return JSON.parse(saved);
-    const currKey = getCurrentMonthKey();
-    const sum = DEFAULT_BUDGET_CATEGORIES.reduce((acc, c) => acc + c.budgetedAmount, 0);
-    return {
-      [currKey]: {
-        id: `budget-${currKey}`,
-        monthYear: currKey,
-        categories: DEFAULT_BUDGET_CATEGORIES,
-        totalBudgeted: sum,
-        updatedAt: new Date().toISOString()
-      }
+    const defaultBudgets = () => {
+      const currKey = getCurrentMonthKey();
+      const sum = DEFAULT_BUDGET_CATEGORIES.reduce((acc, c) => acc + c.budgetedAmount, 0);
+      return {
+        [currKey]: {
+          id: `budget-${currKey}`,
+          monthYear: currKey,
+          categories: DEFAULT_BUDGET_CATEGORIES,
+          totalBudgeted: sum,
+          updatedAt: new Date().toISOString()
+        }
+      };
     };
+    return getStoredItem('budgets', defaultBudgets());
   });
 
   const [dailyExpenses, setDailyExpenses] = useState<DailyExpense[]>(() => {
-    const saved = localStorage.getItem(`${storagePrefix}expenses`);
-    return saved ? JSON.parse(saved) : getSampleExpenses();
+    return getStoredItem('expenses', getSampleExpenses());
   });
 
-  // Local Storage persistence - guarantees 100% offline functionality
+  // Local Storage persistence - Guaranteed to save reliably on every change
   useEffect(() => {
-    localStorage.setItem(`${storagePrefix}accounts`, JSON.stringify(accounts));
-  }, [accounts, storagePrefix]);
+    try {
+      localStorage.setItem('surviva_accounts', JSON.stringify(accounts));
+    } catch (e) {
+      console.error('Failed to save accounts to localStorage:', e);
+    }
+  }, [accounts]);
 
   useEffect(() => {
-    localStorage.setItem(`${storagePrefix}money_lent`, JSON.stringify(moneyLent));
-  }, [moneyLent, storagePrefix]);
+    try {
+      localStorage.setItem('surviva_money_lent', JSON.stringify(moneyLent));
+    } catch (e) {
+      console.error('Failed to save money_lent to localStorage:', e);
+    }
+  }, [moneyLent]);
 
   useEffect(() => {
-    localStorage.setItem(`${storagePrefix}debts`, JSON.stringify(debts));
-  }, [debts, storagePrefix]);
+    try {
+      localStorage.setItem('surviva_debts', JSON.stringify(debts));
+    } catch (e) {
+      console.error('Failed to save debts to localStorage:', e);
+    }
+  }, [debts]);
 
   useEffect(() => {
-    localStorage.setItem(`${storagePrefix}budgets`, JSON.stringify(monthlyBudgets));
-  }, [monthlyBudgets, storagePrefix]);
+    try {
+      localStorage.setItem('surviva_budgets', JSON.stringify(monthlyBudgets));
+    } catch (e) {
+      console.error('Failed to save budgets to localStorage:', e);
+    }
+  }, [monthlyBudgets]);
 
   useEffect(() => {
-    localStorage.setItem(`${storagePrefix}expenses`, JSON.stringify(dailyExpenses));
-  }, [dailyExpenses, storagePrefix]);
+    try {
+      localStorage.setItem('surviva_expenses', JSON.stringify(dailyExpenses));
+    } catch (e) {
+      console.error('Failed to save expenses to localStorage:', e);
+    }
+  }, [dailyExpenses]);
 
   // Accounts Operations
   const addAccount = (acc: Omit<BankAccount, 'id' | 'updatedAt'>) => {

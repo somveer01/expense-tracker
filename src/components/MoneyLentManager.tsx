@@ -60,15 +60,24 @@ export const MoneyLentManager: React.FC = () => {
     setIsAddModalOpen(true);
   };
 
+  const parseNum = (v: any) => {
+    const clean = String(v).replace(/[^0-9.-]+/g, '');
+    const n = parseFloat(clean);
+    return isNaN(n) ? 0 : n;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!borrowerName.trim() || totalAmount === '') return;
 
+    const parsedTotal = parseNum(totalAmount);
+    const parsedReceived = parseNum(amountReceived);
+
     if (editingItem) {
       updateMoneyLent(editingItem.id, {
-        borrowerName,
-        totalAmount: Number(totalAmount),
-        amountReceived: Number(amountReceived) || 0,
+        borrowerName: borrowerName.trim(),
+        totalAmount: parsedTotal,
+        amountReceived: parsedReceived,
         lentDate,
         expectedReturnDate: expectedReturnDate || undefined,
         phone: phone || undefined,
@@ -76,9 +85,9 @@ export const MoneyLentManager: React.FC = () => {
       });
     } else {
       addMoneyLent({
-        borrowerName,
-        totalAmount: Number(totalAmount),
-        amountReceived: Number(amountReceived) || 0,
+        borrowerName: borrowerName.trim(),
+        totalAmount: parsedTotal,
+        amountReceived: parsedReceived,
         lentDate,
         expectedReturnDate: expectedReturnDate || undefined,
         phone: phone || undefined,
@@ -91,9 +100,10 @@ export const MoneyLentManager: React.FC = () => {
 
   const handleRecordRepayment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!repaymentItem || repaymentAmount === '' || Number(repaymentAmount) <= 0) return;
+    const parsedAmt = parseNum(repaymentAmount);
+    if (!repaymentItem || parsedAmt <= 0) return;
 
-    recordLentRepayment(repaymentItem.id, Number(repaymentAmount));
+    recordLentRepayment(repaymentItem.id, parsedAmt);
     setRepaymentItem(null);
     setRepaymentAmount('');
   };

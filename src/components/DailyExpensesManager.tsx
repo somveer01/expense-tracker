@@ -67,17 +67,22 @@ export const DailyExpensesManager: React.FC<DailyExpensesManagerProps> = ({
     e.preventDefault();
     if (!title.trim() || amount === '') return;
 
-    const matchedCat = currentBudget.categories.find(c => c.id === categoryId);
-    const categoryName = matchedCat ? matchedCat.name : 'Other Expense';
+    const cleanAmt = String(amount).replace(/[^0-9.-]+/g, '');
+    const numAmt = parseFloat(cleanAmt);
+    if (isNaN(numAmt) || numAmt <= 0) return;
+
+    const effectiveCatId = categoryId || currentBudget.categories[0]?.id || 'cat-misc';
+    const matchedCat = currentBudget.categories.find(c => c.id === effectiveCatId);
+    const categoryName = matchedCat ? matchedCat.name : 'Daily Expense';
 
     addDailyExpense({
       title: title.trim(),
-      amount: Number(amount),
-      categoryId,
+      amount: numAmt,
+      categoryId: effectiveCatId,
       categoryName,
-      date,
+      date: date || new Date().toISOString().split('T')[0],
       bankAccountId: bankAccountId || undefined,
-      notes: notes || undefined
+      notes: notes.trim() || undefined
     }, deductFromAccount);
 
     setIsModalOpen(false);
