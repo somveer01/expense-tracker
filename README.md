@@ -1,5 +1,9 @@
 # 🛡️ SurvivaTrack - Layoff Runway & Financial Survival App (100% Offline Ready)
 
+🌐 **Live Web App / PWA:** [https://somveer01.github.io/expense-tracker/](https://somveer01.github.io/expense-tracker/)
+
+---
+
 एक आधुनिक, सुरक्षित और **100% ऑफलाइन-फ़र्स्ट (Offline-First)** वेब एप्लिकेशन जिसे विशेष रूप से उन लोगों के लिए डिज़ाइन किया गया है जिनका **लेऑफ (Layoff) या नौकरी छूटने की स्थिति** में यह जानना आवश्यक है कि:
 > **"मेरे पास अभी कितना पैसा बचा है और मैं कितने महीने/कितने दिन तक बिना नौकरी के सुरक्षित सर्वाइव कर सकता हूँ?"**
 
