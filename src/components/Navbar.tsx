@@ -13,7 +13,8 @@ import {
   HardDriveDownload,
   Sun,
   Moon,
-  Type
+  Type,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
@@ -37,7 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveTab 
 }) => {
   const { user, logout, isOnline } = useAuth();
-  const { survivalAnalysis, selectedMonth, setSelectedMonth, resetToSampleData } = useApp();
+  const { survivalAnalysis, selectedMonth, setSelectedMonth, resetToSampleData, clearAllData } = useApp();
   const { theme, toggleTheme } = useTheme();
 
   const getMonthOptions = () => {
@@ -299,6 +300,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <HardDriveDownload className="w-3.5 h-3.5" />
               <span>Backup</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (window.confirm('Are you sure you want to clear all data? This will remove all demo bank accounts, expenses, and loans so you can enter your own real numbers.')) {
+                  clearAllData();
+                }
+              }}
+              title="Clear all data to start fresh"
+              className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 px-2 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-1 text-[11px] whitespace-nowrap shrink-0 font-medium transition"
+            >
+              <Trash2 className="w-3 h-3 text-rose-500" />
+              <span>Clear Data</span>
             </button>
 
             <button

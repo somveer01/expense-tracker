@@ -508,7 +508,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setMoneyLent([]);
     setDebts([]);
     setDailyExpenses([]);
-    setMonthlyBudgets({});
+    const curr = getCurrentMonthKey();
+    const cleanZeroCategories = DEFAULT_BUDGET_CATEGORIES.map(c => ({ ...c, budgetedAmount: 0 }));
+    setMonthlyBudgets({
+      [curr]: {
+        id: `budget-${curr}`,
+        monthYear: curr,
+        categories: cleanZeroCategories,
+        totalBudgeted: 0,
+        updatedAt: new Date().toISOString()
+      }
+    });
+
+    try {
+      localStorage.removeItem('surviva_accounts');
+      localStorage.removeItem('surviva_money_lent');
+      localStorage.removeItem('surviva_debts');
+      localStorage.removeItem('surviva_expenses');
+      localStorage.removeItem('surviva_budgets');
+      localStorage.removeItem('surviva_guest_accounts');
+      localStorage.removeItem('surviva_guest_money_lent');
+      localStorage.removeItem('surviva_guest_debts');
+      localStorage.removeItem('surviva_guest_expenses');
+      localStorage.removeItem('surviva_guest_budgets');
+    } catch (e) {
+      console.warn('LocalStorage clear error', e);
+    }
   };
 
   // Offline Export / Backup
