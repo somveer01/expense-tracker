@@ -6,6 +6,7 @@ import { MonthlyBudgetManager } from './components/MonthlyBudgetManager';
 import { DailyExpensesManager } from './components/DailyExpensesManager';
 import { MoneyLentManager } from './components/MoneyLentManager';
 import { DebtsManager } from './components/DebtsManager';
+import { MiniRunwayBanner } from './components/MiniRunwayBanner';
 import { AuthModal } from './components/AuthModal';
 import { SurvivalSimulatorModal } from './components/SurvivalSimulatorModal';
 import { OfflineBackupModal } from './components/OfflineBackupModal';
@@ -28,7 +29,7 @@ import { useApp } from './context/AppContext';
 
 export const App: React.FC = () => {
   const { isOnline } = useAuth();
-  const { toast } = useApp();
+  const { toast, survivalAnalysis } = useApp();
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
@@ -83,6 +84,14 @@ export const App: React.FC = () => {
 
       {/* Main App Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 sm:pb-12 min-w-0">
+        {/* Compact Runway Banner on Sub-Tabs */}
+        {activeTab !== 'dashboard' && (
+          <MiniRunwayBanner 
+            setActiveTab={setActiveTab}
+            onOpenSimulator={() => setIsSimulatorOpen(true)}
+          />
+        )}
+
         {activeTab === 'dashboard' && (
           <Dashboard
             setActiveTab={setActiveTab}
@@ -135,7 +144,14 @@ export const App: React.FC = () => {
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
-          <LayoutDashboard className="w-5 h-5" />
+          <div className="relative">
+            <LayoutDashboard className="w-5 h-5" />
+            {survivalAnalysis.totalCapital > 0 && (
+              <span className="absolute -top-1 -right-3 text-[8px] font-extrabold bg-indigo-600 text-white px-1 rounded-full leading-tight">
+                {survivalAnalysis.monthsRemaining}m
+              </span>
+            )}
+          </div>
           <span className="text-[10px]">Runway</span>
         </button>
 
