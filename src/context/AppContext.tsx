@@ -50,6 +50,10 @@ interface AppContextType {
   resetToSampleData: () => void;
   clearAllData: () => void;
 
+  // Global Toast Messages
+  toast: { msg: string; type: 'success' | 'info' | 'error' } | null;
+  showToast: (msg: string, type?: 'success' | 'info' | 'error') => void;
+
   // 100% Offline Backup & Restore
   exportBackupJSON: () => void;
   importBackupJSON: (jsonString: string) => boolean;
@@ -187,6 +191,14 @@ const getStoredItem = <T,>(key: string, fallback: T): T => {
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  const showToast = (msg: string, type: 'success' | 'info' | 'error' = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => {
+      setToast(null);
+    }, 3500);
+  };
 
   // Unified State with persistent offline storage
   const [accounts, setAccounts] = useState<BankAccount[]>(() => {
@@ -271,14 +283,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updatedAt: new Date().toISOString()
     };
     setAccounts(prev => [...prev, newAcc]);
+    showToast(`Bank account "${acc.bankName}" added successfully!`);
   };
 
   const updateAccount = (id: string, updated: Partial<BankAccount>) => {
     setAccounts(prev => prev.map(a => a.id === id ? { ...a, ...updated, updatedAt: new Date().toISOString() } : a));
+    showToast(`Account updated successfully!`);
   };
 
   const deleteAccount = (id: string) => {
     setAccounts(prev => prev.filter(a => a.id !== id));
+    showToast(`Account removed.`);
   };
 
   // Money Lent Operations
@@ -292,6 +307,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status
     };
     setMoneyLent(prev => [newItem, ...prev]);
+    showToast(`Money lent to "${item.borrowerName}" recorded!`);
   };
 
   const recordLentRepayment = (id: string, amount: number) => {
@@ -307,6 +323,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         status: newStatus
       };
     }));
+    showToast(`Repayment of ₹${amount.toLocaleString('en-IN')} recorded!`);
   };
 
   const updateMoneyLent = (id: string, item: Partial<MoneyLent>) => {
@@ -318,10 +335,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const status = remaining === 0 ? 'fully_settled' : received > 0 ? 'partially_settled' : 'active';
       return { ...m, ...item, remainingAmount: remaining, status };
     }));
+    showToast(`Record updated successfully!`);
   };
 
   const deleteMoneyLent = (id: string) => {
     setMoneyLent(prev => prev.filter(m => m.id !== id));
+    showToast(`Record deleted.`);
   };
 
   // Debts & Loans Operations
@@ -335,6 +354,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status
     };
     setDebts(prev => [newItem, ...prev]);
+    showToast(`Debt/Loan from "${item.lenderName}" recorded!`);
   };
 
   const recordDebtPayment = (id: string, amount: number) => {
@@ -349,6 +369,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         status: newRemaining === 0 ? 'closed' : 'active'
       };
     }));
+    showToast(`EMI payment of ₹${amount.toLocaleString('en-IN')} recorded!`);
   };
 
   const updateDebt = (id: string, item: Partial<DebtLoan>) => {
@@ -363,6 +384,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteDebt = (id: string) => {
     setDebts(prev => prev.filter(d => d.id !== id));
+    showToast(`Debt/Loan record removed.`);
   };
 
   // Monthly Budget Operations (Inherit from previous month without mutating past records)
@@ -402,6 +424,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updatedAt: new Date().toISOString()
       }
     }));
+    showToast(`Budget for ${monthKey} saved! (Total: ₹${total.toLocaleString('en-IN')})`);
   };
 
   const copyBudgetFromPreviousMonth = (targetMonthKey: string) => {
@@ -411,6 +434,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const latestPrior = priorMonths[priorMonths.length - 1];
       const clonedCategories = monthlyBudgets[latestPrior].categories.map(c => ({ ...c }));
       saveMonthBudget(targetMonthKey, clonedCategories);
+      showToast(`Copied budget template from prior month!`);
     }
   };
 
@@ -431,10 +455,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return a;
       }));
     }
+    showToast(`Expense of ₹${exp.amount.toLocaleString('en-IN')} logged!`);
   };
 
   const deleteDailyExpense = (id: string) => {
     setDailyExpenses(prev => prev.filter(e => e.id !== id));
+    showToast(`Expense deleted.`);
   };
 
   // Core Survival Calculation
@@ -603,6 +629,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       survivalAnalysis,
       resetToSampleData,
       clearAllData,
+      toast,
+      showToast,
       exportBackupJSON,
       importBackupJSON
     }}>

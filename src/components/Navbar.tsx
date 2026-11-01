@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   ShieldAlert, 
   Wallet, 
@@ -40,6 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { user, logout, isOnline } = useAuth();
   const { survivalAnalysis, selectedMonth, setSelectedMonth, resetToSampleData, clearAllData } = useApp();
   const { theme, toggleTheme } = useTheme();
+  const [isConfirmClearOpen, setIsConfirmClearOpen] = useState(false);
 
   const getMonthOptions = () => {
     const options = [];
@@ -303,11 +304,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
-              onClick={() => {
-                if (window.confirm('Are you sure you want to clear all data? This will remove all demo bank accounts, expenses, and loans so you can enter your own real numbers.')) {
-                  clearAllData();
-                }
-              }}
+              onClick={() => setIsConfirmClearOpen(true)}
               title="Clear all data to start fresh"
               className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 px-2 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-1 text-[11px] whitespace-nowrap shrink-0 font-medium transition"
             >
@@ -326,6 +323,47 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
         </div>
       </div>
+
+      {/* In-App Clear Data Confirmation Modal */}
+      {isConfirmClearOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 flex items-center justify-center shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Clear All Data?</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Start fresh with empty records</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              This will remove all demo bank accounts, debts, daily expenses, and receivables from your device. You can then enter your own real financial numbers.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsConfirmClearOpen(false)}
+                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  clearAllData();
+                  setIsConfirmClearOpen(false);
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl transition shadow-sm"
+              >
+                Yes, Clear All Data
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

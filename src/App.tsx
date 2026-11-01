@@ -18,12 +18,17 @@ import {
   Wallet,
   CalendarDays,
   ShoppingBag,
-  MoreHorizontal
+  MoreHorizontal,
+  CheckCircle2,
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
+import { useApp } from './context/AppContext';
 
 export const App: React.FC = () => {
   const { isOnline } = useAuth();
+  const { toast } = useApp();
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
@@ -235,6 +240,28 @@ export const App: React.FC = () => {
         isOpen={isThemeModalOpen}
         onClose={() => setIsThemeModalOpen(false)}
       />
+
+      {/* Global Toast Notification Banner */}
+      {toast && (
+        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 animate-in slide-in-from-bottom-5 fade-in duration-200 pointer-events-none">
+          <div className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs sm:text-sm font-semibold backdrop-blur-md pointer-events-auto ${
+            toast.type === 'error'
+              ? 'bg-rose-900/90 text-white border-rose-700/80 shadow-rose-900/20'
+              : toast.type === 'info'
+              ? 'bg-slate-900/90 text-white border-slate-700/80 shadow-slate-900/20'
+              : 'bg-emerald-900/90 text-white border-emerald-700/80 shadow-emerald-900/20'
+          }`}>
+            {toast.type === 'error' ? (
+              <AlertCircle className="w-4 h-4 text-rose-300 shrink-0" />
+            ) : toast.type === 'info' ? (
+              <Info className="w-4 h-4 text-cyan-300 shrink-0" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
+            )}
+            <span>{toast.msg}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

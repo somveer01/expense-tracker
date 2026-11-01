@@ -25,7 +25,8 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ 
   setActiveTab, 
   onOpenSimulator,
-  onOpenAddExpense
+  onOpenAddExpense,
+  onOpenAddAccount
 }) => {
   const { survivalAnalysis, selectedMonth, accounts, moneyLent, debts, dailyExpenses } = useApp();
 
@@ -44,85 +45,136 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Hero Survival Runway Banner (Soothing, Eye-Friendly Design) */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-50/90 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 border border-indigo-100 dark:border-slate-800 p-4 sm:p-8 shadow-sm w-full max-w-full">
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 min-w-0 w-full">
-          <div className="space-y-3 max-w-xl min-w-0 w-full">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/40 text-xs font-semibold">
-              <Clock className="w-3.5 h-3.5 shrink-0" />
-              <span>Job Search Emergency Runway</span>
+      {/* Empty State / Welcome Guide when all data is cleared */}
+      {accounts.length === 0 ? (
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-50/90 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 border border-indigo-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-sm">
+          <div className="max-w-2xl space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 text-xs font-semibold">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Clean Slate Ready • Add Your Details</span>
             </div>
 
-            <h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight break-words">
-              You have <span className="text-indigo-600 dark:text-amber-400">{survivalAnalysis.monthsRemaining} months {survivalAnalysis.daysRemaining} days</span> of survival runway left
+            <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              Ready to Track Your Layoff Survival Runway?
             </h1>
 
-            <p className="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed break-words">
-              Based on your declared monthly burn rate ({formatCurrency(survivalAnalysis.monthlyBurnRate)}/mo), your liquid capital of <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{formatCurrency(survivalAnalysis.totalCapital)}</strong> will last until{' '}
-              <span className="font-semibold text-slate-900 dark:text-white underline decoration-indigo-400 dark:decoration-amber-400 underline-offset-4">
-                {survivalAnalysis.runwayDate}
-              </span>.
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              Your financial data has been cleared. Follow these 2 easy steps to calculate how many days and months your remaining money will last:
             </p>
-          </div>
 
-          {/* Quick Metrics Badge Card */}
-          <div className="w-full lg:w-auto bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row lg:flex-col gap-4 sm:min-w-[280px]">
-            {/* Essential Only Mode */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1 font-medium">
-                  <ShieldAlert className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  Strict Lean Survival:
-                </span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                  {survivalAnalysis.essentialMonthsRemaining}m {survivalAnalysis.essentialDaysRemaining}d
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Cutting non-essentials extends your money until <strong className="text-slate-800 dark:text-slate-200">{survivalAnalysis.runwayDateEssential}</strong>.
-              </p>
-            </div>
-
-            <div className="h-px bg-slate-100 dark:bg-slate-700" />
-
-            {/* Quick Actions */}
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               <button
-                onClick={onOpenSimulator}
-                className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition shadow-sm"
+                onClick={() => {
+                  setActiveTab('accounts');
+                  onOpenAddAccount();
+                }}
+                className="p-4 bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-2xl flex items-center gap-3.5 text-left transition group shadow-sm"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Simulator</span>
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <div>
+                  <strong className="block text-xs sm:text-sm text-slate-900 dark:text-white font-bold">1. Add Bank Accounts & Cash</strong>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Save PNB, HDFC, SBI, or Cash in hand</span>
+                </div>
               </button>
+
               <button
-                onClick={onOpenAddExpense}
-                className="flex-1 py-2 px-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-650 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition border border-slate-200 dark:border-slate-600"
+                onClick={() => setActiveTab('budget')}
+                className="p-4 bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-2xl flex items-center gap-3.5 text-left transition group shadow-sm"
               >
-                <PlusCircle className="w-3.5 h-3.5 text-indigo-600 dark:text-amber-400" />
-                <span>Add Expense</span>
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <strong className="block text-xs sm:text-sm text-slate-900 dark:text-white font-bold">2. Declare Monthly Budget</strong>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Set Rent, Groceries, Gas, & Bills</span>
+                </div>
               </button>
             </div>
           </div>
         </div>
+      ) : (
+        /* Hero Survival Runway Banner (Soothing, Eye-Friendly Design) */
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-50/90 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 border border-indigo-100 dark:border-slate-800 p-4 sm:p-8 shadow-sm w-full max-w-full">
+          <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 min-w-0 w-full">
+            <div className="space-y-3 max-w-xl min-w-0 w-full">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/40 text-xs font-semibold">
+                <Clock className="w-3.5 h-3.5 shrink-0" />
+                <span>Job Search Emergency Runway</span>
+              </div>
 
-        {/* Layoff Actionable Insights */}
-        {survivalAnalysis.totalReceivables > 0 && (
-          <div className="mt-6 pt-4 border-t border-indigo-100 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs bg-indigo-50/40 dark:bg-slate-800/40 -mx-6 sm:-mx-8 -mb-6 sm:-mb-8 px-6 sm:px-8 py-3.5">
-            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-              <HeartHandshake className="w-4 h-4 text-amber-500 shrink-0" />
-              <span>
-                <strong>Actionable Opportunity:</strong> You have lent <strong>{formatCurrency(survivalAnalysis.totalReceivables)}</strong> to others. Recovering this will extend your runway by <strong className="text-indigo-600 dark:text-amber-300 font-bold">+{receivableRunwayGainDays} days</strong>!
-              </span>
+              <h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight break-words">
+                You have <span className="text-indigo-600 dark:text-amber-400">{survivalAnalysis.monthsRemaining} months {survivalAnalysis.daysRemaining} days</span> of survival runway left
+              </h1>
+
+              <p className="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed break-words">
+                Based on your declared monthly burn rate ({formatCurrency(survivalAnalysis.monthlyBurnRate)}/mo), your liquid capital of <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{formatCurrency(survivalAnalysis.totalCapital)}</strong> will last until{' '}
+                <span className="font-semibold text-slate-900 dark:text-white underline decoration-indigo-400 dark:decoration-amber-400 underline-offset-4">
+                  {survivalAnalysis.runwayDate}
+                </span>.
+              </p>
             </div>
-            <button
-              onClick={() => setActiveTab('lent')}
-              className="text-indigo-600 dark:text-amber-400 hover:underline font-semibold flex items-center gap-1 whitespace-nowrap"
-            >
-              View Receivables →
-            </button>
+
+            {/* Quick Metrics Badge Card */}
+            <div className="w-full lg:w-auto bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row lg:flex-col gap-4 sm:min-w-[280px]">
+              {/* Essential Only Mode */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1 font-medium">
+                    <ShieldAlert className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    Strict Lean Survival:
+                  </span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                    {survivalAnalysis.essentialMonthsRemaining}m {survivalAnalysis.essentialDaysRemaining}d
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Cutting non-essentials extends your money until <strong className="text-slate-800 dark:text-slate-200">{survivalAnalysis.runwayDateEssential}</strong>.
+                </p>
+              </div>
+
+              <div className="h-px bg-slate-100 dark:bg-slate-700" />
+
+              {/* Quick Actions */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onOpenSimulator}
+                  className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition shadow-sm"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Simulator</span>
+                </button>
+                <button
+                  onClick={onOpenAddExpense}
+                  className="flex-1 py-2 px-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-650 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition border border-slate-200 dark:border-slate-600"
+                >
+                  <PlusCircle className="w-3.5 h-3.5 text-indigo-600 dark:text-amber-400" />
+                  <span>Add Expense</span>
+                </button>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Layoff Actionable Insights */}
+          {survivalAnalysis.totalReceivables > 0 && (
+            <div className="mt-6 pt-4 border-t border-indigo-100 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs bg-indigo-50/40 dark:bg-slate-800/40 -mx-4 sm:-mx-8 -mb-4 sm:-mb-8 px-4 sm:px-8 py-3.5">
+              <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <HeartHandshake className="w-4 h-4 text-amber-500 shrink-0" />
+                <span>
+                  <strong>Actionable Opportunity:</strong> You have lent <strong>{formatCurrency(survivalAnalysis.totalReceivables)}</strong> to others. Recovering this will extend your runway by <strong className="text-indigo-600 dark:text-amber-300 font-bold">+{receivableRunwayGainDays} days</strong>!
+                </span>
+              </div>
+              <button
+                onClick={() => setActiveTab('lent')}
+                className="text-indigo-600 dark:text-amber-400 hover:underline font-semibold flex items-center gap-1 whitespace-nowrap"
+              >
+                View Receivables →
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 4 Financial Pillar Summary Cards (Clean, Soothing Pastels) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
