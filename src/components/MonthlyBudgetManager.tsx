@@ -36,6 +36,8 @@ export const MonthlyBudgetManager: React.FC = () => {
     saveMonthBudget, 
     copyBudgetFromPreviousMonth,
     renameCategory,
+    requestDeleteConfirm,
+    showToast,
     dailyExpenses
   } = useApp();
 
@@ -84,12 +86,15 @@ export const MonthlyBudgetManager: React.FC = () => {
     });
   };
 
-  const handleDeleteCategory = (id: string) => {
+  const handleDeleteCategory = (id: string, name?: string) => {
     setCategories(prev => {
       const next = prev.filter(c => c.id !== id);
       saveMonthBudget(selectedMonth, next);
       return next;
     });
+    if (name) {
+      showToast(`Category "${name}" deleted.`, 'error');
+    }
   };
 
   const handleSave = () => {
@@ -432,9 +437,11 @@ export const MonthlyBudgetManager: React.FC = () => {
 
                   <button
                     onClick={() => {
-                      if (window.confirm(`Delete budget category "${cat.name}"?`)) {
-                        handleDeleteCategory(cat.id);
-                      }
+                      requestDeleteConfirm({
+                        title: 'Delete Budget Category',
+                        message: `Are you sure you want to delete category "${cat.name}"?`,
+                        onConfirm: () => handleDeleteCategory(cat.id, cat.name)
+                      });
                     }}
                     className="p-2 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-rose-50 dark:hover:bg-slate-800 transition"
                     title="Remove Category"

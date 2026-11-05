@@ -56,6 +56,11 @@ interface AppContextType {
   toast: { msg: string; type: 'success' | 'info' | 'error' } | null;
   showToast: (msg: string, type?: 'success' | 'info' | 'error') => void;
 
+  // Global Delete Confirmation
+  deleteConfirm: { isOpen: boolean; title: string; message: string; onConfirm: () => void } | null;
+  requestDeleteConfirm: (options: { title: string; message: string; onConfirm: () => void }) => void;
+  closeDeleteConfirm: () => void;
+
   // 100% Offline Backup & Restore
   exportBackupJSON: () => void;
   importBackupJSON: (jsonString: string) => boolean;
@@ -196,12 +201,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const { user } = useAuth();
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'info' | 'error' } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
 
   const showToast = (msg: string, type: 'success' | 'info' | 'error' = 'success') => {
     setToast({ msg, type });
     setTimeout(() => {
       setToast(null);
     }, 3500);
+  };
+
+  const requestDeleteConfirm = (options: { title: string; message: string; onConfirm: () => void }) => {
+    setDeleteConfirm({
+      isOpen: true,
+      title: options.title,
+      message: options.message,
+      onConfirm: options.onConfirm
+    });
+  };
+
+  const closeDeleteConfirm = () => {
+    setDeleteConfirm(null);
   };
 
   // Unified State with persistent offline storage
@@ -314,7 +333,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteAccount = (id: string) => {
     setAccounts(prev => prev.filter(a => a.id !== id));
-    showToast(`Account removed.`);
+    showToast(`Bank account removed successfully.`, 'error');
   };
 
   // Money Lent Operations
@@ -361,7 +380,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteMoneyLent = (id: string) => {
     setMoneyLent(prev => prev.filter(m => m.id !== id));
-    showToast(`Record deleted.`);
+    showToast(`Money lent record deleted.`, 'error');
   };
 
   // Debts & Loans Operations
@@ -405,7 +424,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteDebt = (id: string) => {
     setDebts(prev => prev.filter(d => d.id !== id));
-    showToast(`Debt/Loan record removed.`);
+    showToast(`Debt/Loan record removed.`, 'error');
   };
 
   // Monthly Budget Operations (Inherit from previous month without mutating past records)
@@ -552,7 +571,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }));
     }
     setDailyExpenses(prev => prev.filter(e => e.id !== id));
-    showToast(`Expense deleted.`);
+    showToast(`Expense deleted successfully.`, 'error');
   };
 
   // Core Survival Calculation
@@ -725,6 +744,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       clearAllData,
       toast,
       showToast,
+      deleteConfirm,
+      requestDeleteConfirm,
+      closeDeleteConfirm,
       exportBackupJSON,
       importBackupJSON
     }}>

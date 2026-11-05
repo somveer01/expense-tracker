@@ -15,7 +15,7 @@ import { useApp } from '../context/AppContext';
 import { DebtLoan } from '../types';
 
 export const DebtsManager: React.FC = () => {
-  const { debts, addDebt, recordDebtPayment, updateDebt, deleteDebt, survivalAnalysis } = useApp();
+  const { debts, addDebt, recordDebtPayment, updateDebt, deleteDebt, survivalAnalysis, requestDeleteConfirm } = useApp();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DebtLoan | null>(null);
@@ -303,9 +303,11 @@ export const DebtsManager: React.FC = () => {
 
                       <button
                         onClick={() => {
-                          if (confirm(`Remove record for ${item.lenderName}?`)) {
-                            deleteDebt(item.id);
-                          }
+                          requestDeleteConfirm({
+                            title: 'Remove Debt / Loan',
+                            message: `Are you sure you want to remove record for "${item.lenderName}"?`,
+                            onConfirm: () => deleteDebt(item.id)
+                          });
                         }}
                         className="p-2 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
                         title="Delete"

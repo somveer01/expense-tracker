@@ -48,7 +48,8 @@ export const DailyExpensesManager: React.FC<DailyExpensesManagerProps> = ({
     selectedMonth, 
     accounts, 
     getBudgetForMonth,
-    survivalAnalysis 
+    survivalAnalysis,
+    requestDeleteConfirm
   } = useApp();
 
   const [localModalOpen, setLocalModalOpen] = useState(false);
@@ -411,9 +412,11 @@ export const DailyExpensesManager: React.FC<DailyExpensesManagerProps> = ({
 
                       <button
                         onClick={() => {
-                          if (window.confirm(`Delete expense "${exp.title}" (${formatCurrency(exp.amount)})?`)) {
-                            deleteDailyExpense(exp.id, true);
-                          }
+                          requestDeleteConfirm({
+                            title: 'Delete Expense',
+                            message: `Are you sure you want to delete "${exp.title}" (${formatCurrency(exp.amount)})?`,
+                            onConfirm: () => deleteDailyExpense(exp.id, true)
+                          });
                         }}
                         className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-slate-800 transition"
                         title="Delete Expense"

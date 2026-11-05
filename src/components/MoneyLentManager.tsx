@@ -16,7 +16,7 @@ import { useApp } from '../context/AppContext';
 import { MoneyLent } from '../types';
 
 export const MoneyLentManager: React.FC = () => {
-  const { moneyLent, addMoneyLent, recordLentRepayment, updateMoneyLent, deleteMoneyLent, survivalAnalysis } = useApp();
+  const { moneyLent, addMoneyLent, recordLentRepayment, updateMoneyLent, deleteMoneyLent, survivalAnalysis, requestDeleteConfirm } = useApp();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MoneyLent | null>(null);
@@ -282,9 +282,11 @@ export const MoneyLentManager: React.FC = () => {
 
                       <button
                         onClick={() => {
-                          if (confirm(`Remove record for ${item.borrowerName}?`)) {
-                            deleteMoneyLent(item.id);
-                          }
+                          requestDeleteConfirm({
+                            title: 'Remove Money Lent Record',
+                            message: `Are you sure you want to remove record for "${item.borrowerName}"?`,
+                            onConfirm: () => deleteMoneyLent(item.id)
+                          });
                         }}
                         className="p-2 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
                         title="Delete"

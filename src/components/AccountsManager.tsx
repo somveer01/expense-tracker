@@ -26,7 +26,7 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
   isAddModalOpen: parentAddModalOpen,
   setIsAddModalOpen: parentSetAddModalOpen
 }) => {
-  const { accounts, addAccount, updateAccount, deleteAccount, survivalAnalysis } = useApp();
+  const { accounts, addAccount, updateAccount, deleteAccount, survivalAnalysis, requestDeleteConfirm } = useApp();
 
   const [internalModalOpen, setInternalModalOpen] = useState(false);
   const isModalOpen = parentAddModalOpen !== undefined ? parentAddModalOpen : internalModalOpen;
@@ -220,9 +220,11 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
                     </button>
                     <button
                       onClick={() => {
-                        if (window.confirm(`Are you sure you want to remove ${acc.bankName}?`)) {
-                          deleteAccount(acc.id);
-                        }
+                        requestDeleteConfirm({
+                          title: 'Remove Bank Account',
+                          message: `Are you sure you want to remove "${acc.bankName}"?`,
+                          onConfirm: () => deleteAccount(acc.id)
+                        });
                       }}
                       className="p-1 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-white/80 dark:hover:bg-slate-800 transition"
                       title="Delete Account"

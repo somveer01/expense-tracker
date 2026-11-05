@@ -28,14 +28,15 @@ import {
   CreditCard,
   Sparkles,
   Sliders,
-  Plus
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import { useApp } from './context/AppContext';
 
 export const App: React.FC = () => {
   const { isOnline } = useAuth();
-  const { toast, survivalAnalysis } = useApp();
+  const { toast, showToast, deleteConfirm, closeDeleteConfirm, survivalAnalysis } = useApp();
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
@@ -391,24 +392,77 @@ export const App: React.FC = () => {
         onClose={() => setIsThemeModalOpen(false)}
       />
 
-      {/* Global Toast Notification */}
+      {/* Global Toast Notification (Centered with vivid theme) */}
       {toast && (
-        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 animate-in slide-in-from-bottom-5 fade-in duration-200 pointer-events-none">
-          <div className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs sm:text-sm font-semibold backdrop-blur-md pointer-events-auto ${
+        <div className="fixed top-5 sm:top-7 left-1/2 -translate-x-1/2 z-[130] w-[92vw] max-w-md pointer-events-none flex justify-center animate-in fade-in slide-in-from-top-4 zoom-in-95 duration-200">
+          <div className={`pointer-events-auto w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-xs sm:text-sm font-semibold backdrop-blur-md transition-all ${
             toast.type === 'error'
-              ? 'bg-rose-900/90 text-white border-rose-700/80 shadow-rose-900/20'
+              ? 'bg-rose-600 text-white border-rose-400/50 shadow-rose-950/30'
               : toast.type === 'info'
-              ? 'bg-slate-900/90 text-white border-slate-700/80 shadow-slate-900/20'
-              : 'bg-emerald-900/90 text-white border-emerald-700/80 shadow-emerald-900/20'
+              ? 'bg-indigo-600 text-white border-indigo-400/50 shadow-indigo-950/30'
+              : 'bg-emerald-600 text-white border-emerald-400/50 shadow-emerald-950/30'
           }`}>
-            {toast.type === 'error' ? (
-              <AlertCircle className="w-4 h-4 text-rose-300 shrink-0" />
-            ) : toast.type === 'info' ? (
-              <Info className="w-4 h-4 text-cyan-300 shrink-0" />
-            ) : (
-              <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
-            )}
-            <span>{toast.msg}</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-1 rounded-xl bg-white/20 shrink-0">
+                {toast.type === 'error' ? (
+                  <AlertCircle className="w-4 h-4 text-white" />
+                ) : toast.type === 'info' ? (
+                  <Info className="w-4 h-4 text-white" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 text-white" />
+                )}
+              </div>
+              <span className="truncate">{toast.msg}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => showToast('', 'info')}
+              className="p-1 rounded-lg hover:bg-white/20 text-white/80 hover:text-white transition shrink-0 cursor-pointer"
+              title="Dismiss"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Global Delete Confirmation Dialog (Centered) */}
+      {deleteConfirm && deleteConfirm.isOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl text-center space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200/80 dark:border-rose-900/60 flex items-center justify-center text-rose-600 dark:text-rose-400 mx-auto shadow-sm">
+              <Trash2 className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                {deleteConfirm.title}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                {deleteConfirm.message}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={closeDeleteConfirm}
+                className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 rounded-2xl text-xs sm:text-sm font-bold transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  deleteConfirm.onConfirm();
+                  closeDeleteConfirm();
+                }}
+                className="py-2.5 px-4 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white rounded-2xl text-xs sm:text-sm font-bold shadow-md shadow-rose-600/30 transition flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
