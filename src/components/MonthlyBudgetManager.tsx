@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Calendar, 
   Plus, 
@@ -27,7 +27,10 @@ import {
   GraduationCap,
   Smartphone,
   Wrench,
-  Car
+  Car,
+  GripVertical,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { BudgetCategory } from '../types';
@@ -51,6 +54,96 @@ export const MonthlyBudgetManager: React.FC = () => {
   // Rename Category State
   const [editingCatId, setEditingCatId] = useState<string | null>(null);
   const [editingCatName, setEditingCatName] = useState<string>('');
+
+  // Drag-and-drop & Touch Long-Press Reordering State
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [touchDragIndex, setTouchDragIndex] = useState<number | null>(null);
+  const [touchCurrentOverIndex, setTouchCurrentOverIndex] = useState<number | null>(null);
+
+  const touchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const startYRef = useRef<number>(0);
+  const isLongPressActiveRef = useRef<boolean>(false);
+
+  const reorderCategory = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= categories.length || toIndex >= categories.length) return;
+    setCategories(prev => {
+      const updated = [...prev];
+      const [moved] = updated.splice(fromIndex, 1);
+      updated.splice(toIndex, 0, moved);
+      saveMonthBudget(selectedMonth, updated);
+      return updated;
+    });
+  };
+
+  const moveUp = (index: number) => {
+    if (index > 0) reorderCategory(index, index - 1);
+  };
+
+  const moveDown = (index: number) => {
+    if (index < categories.length - 1) reorderCategory(index, index + 1);
+  };
+
+  const handleTouchStart = (index: number, e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    startYRef.current = touch.clientY;
+    isLongPressActiveRef.current = false;
+
+    touchTimerRef.current = setTimeout(() => {
+      isLongPressActiveRef.current = true;
+      setTouchDragIndex(index);
+      setTouchCurrentOverIndex(index);
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(40);
+      }
+    }, 250);
+  };
+
+  const handleTouchMove = (_index: number, e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const deltaY = Math.abs(touch.clientY - startYRef.current);
+
+    if (!isLongPressActiveRef.current) {
+      if (deltaY > 8) {
+        if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+      }
+      return;
+    }
+
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+
+    const clientY = touch.clientY;
+    for (let i = 0; i < itemRefs.current.length; i++) {
+      const el = itemRefs.current[i];
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        if (clientY >= rect.top && clientY <= rect.bottom) {
+          setTouchCurrentOverIndex(i);
+          break;
+        }
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+
+    if (isLongPressActiveRef.current && touchDragIndex !== null && touchCurrentOverIndex !== null) {
+      if (touchDragIndex !== touchCurrentOverIndex) {
+        reorderCategory(touchDragIndex, touchCurrentOverIndex);
+      }
+    }
+
+    isLongPressActiveRef.current = false;
+    setTouchDragIndex(null);
+    setTouchCurrentOverIndex(null);
+  };
 
   // New Category Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -346,7 +439,7 @@ export const MonthlyBudgetManager: React.FC = () => {
           </div>
         </div>
       <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
-          {categories.map(cat => {
+          {categories.map((cat, index) => {
             const spent = getSpentForCategory(cat.id);
             const planned = Number(cat.budgetedAmount) || 0;
             const diff = planned - spent;
@@ -355,13 +448,82 @@ export const MonthlyBudgetManager: React.FC = () => {
               : spent > 0 ? 100 : 0;
             const catBg = getCategoryBg(cat.name);
 
+            const isBeingDragged = touchDragIndex === index || draggedIndex === index;
+            const isTargetDrop = (dragOverIndex === index || touchCurrentOverIndex === index) && !isBeingDragged;
+
             return (
               <div 
                 key={cat.id} 
-                className="p-3.5 sm:p-5 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 group"
+                ref={el => itemRefs.current[index] = el}
+                draggable={true}
+                onDragStart={(e) => {
+                  setDraggedIndex(index);
+                  e.dataTransfer.effectAllowed = 'move';
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  if (dragOverIndex !== index) {
+                    setDragOverIndex(index);
+                  }
+                }}
+                onDragEnd={() => {
+                  setDraggedIndex(null);
+                  setDragOverIndex(null);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (draggedIndex !== null && draggedIndex !== index) {
+                    reorderCategory(draggedIndex, index);
+                  }
+                  setDraggedIndex(null);
+                  setDragOverIndex(null);
+                }}
+                onTouchStart={(e) => handleTouchStart(index, e)}
+                onTouchMove={(e) => handleTouchMove(index, e)}
+                onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchEnd}
+                className={`p-3.5 sm:p-4 transition-all duration-150 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group relative select-none ${
+                  isBeingDragged
+                    ? 'scale-[1.02] shadow-2xl ring-2 ring-indigo-500 bg-indigo-50/90 dark:bg-indigo-950/80 z-30 opacity-95 rounded-2xl'
+                    : isTargetDrop
+                    ? 'bg-indigo-50/50 dark:bg-indigo-950/40 border-t-2 border-indigo-500'
+                    : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/40'
+                }`}
               >
-                {/* Left: Category Icon, Name, and Essential Badge */}
-                <div className="flex items-center gap-3 min-w-0 flex-1">
+                {/* Left: Drag Handle, Category Icon, Name, and Essential Badge */}
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  {/* Long-Press & Drag Handle */}
+                  <div className="flex items-center gap-0.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 shrink-0">
+                    <div 
+                      className="p-1 cursor-grab active:cursor-grabbing hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg touch-none"
+                      title="Long press or drag to reorder"
+                    >
+                      <GripVertical className="w-4 h-4" />
+                    </div>
+                    {/* Quick Move Arrows for Touch */}
+                    <div className="flex flex-col -space-y-1 sm:hidden">
+                      <button
+                        type="button"
+                        disabled={index === 0}
+                        onClick={(e) => { e.stopPropagation(); moveUp(index); }}
+                        className="p-0.5 text-slate-400 disabled:opacity-20 hover:text-indigo-600 disabled:hover:text-slate-400 cursor-pointer"
+                        title="Move Up"
+                      >
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={index === categories.length - 1}
+                        onClick={(e) => { e.stopPropagation(); moveDown(index); }}
+                        className="p-0.5 text-slate-400 disabled:opacity-20 hover:text-indigo-600 disabled:hover:text-slate-400 cursor-pointer"
+                        title="Move Down"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border ${catBg}`}>
                     {getCategoryIcon(cat.name)}
                   </div>
