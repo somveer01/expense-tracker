@@ -137,45 +137,45 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm">
-        <div className="space-y-1">
+    <div className="space-y-4">
+      {/* Top Banner (Compact) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs">
+        <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-              <Wallet className="w-4 h-4" />
+            <span className="p-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              <Wallet className="w-3.5 h-3.5" />
             </span>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Bank Accounts & Capital
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40 font-semibold">
+            <span className="text-[11px] px-2 py-0.2 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40 font-bold">
               {accounts.length} Active
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Track all bank balances (PNB, HDFC, SBI, Cash in Hand). This forms your total available liquid survival fund.
+            Total liquid survival fund across all accounts and cash.
           </p>
         </div>
 
-        <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
+        <div className="flex items-center justify-between sm:justify-end gap-3">
           <div className="text-left sm:text-right">
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Total Liquid Capital</span>
-            <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+            <span className="text-[10px] text-slate-400 block font-semibold uppercase">Total Capital</span>
+            <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
               {formatCurrency(survivalAnalysis.totalCapital)}
             </span>
           </div>
           <button
             onClick={openAddModal}
-            className="py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold rounded-2xl flex items-center gap-2 transition shadow-md shadow-indigo-600/20 shrink-0 cursor-pointer"
+            className="py-2 px-3.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition shadow-xs shrink-0 cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             <span>Add Account</span>
           </button>
         </div>
       </div>
 
-      {/* Modern Accounts Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+      {/* Modern Accounts Cards Grid (Compact) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {accounts.map(acc => {
           const isQuickEditing = quickEditId === acc.id;
           const cardGradient = getAccountCardBg(acc.accountType);
@@ -186,20 +186,20 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
           return (
             <div 
               key={acc.id} 
-              className={`relative overflow-hidden rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-200 bg-gradient-to-br border ${cardGradient} flex flex-col justify-between group`}
+              className={`relative overflow-hidden rounded-2xl p-3.5 sm:p-4 shadow-xs hover:shadow-sm transition-all duration-150 bg-gradient-to-br border ${cardGradient} flex flex-col justify-between group`}
             >
               <div>
                 {/* Header row */}
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center shadow-xs border border-slate-200/60 dark:border-slate-700/60">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center shadow-xs border border-slate-200/60 dark:border-slate-700/60 shrink-0">
                       {getAccountIcon(acc.accountType)}
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900 dark:text-white text-base leading-snug tracking-tight">
+                      <h3 className="font-bold text-slate-900 dark:text-white text-sm leading-snug tracking-tight">
                         {acc.bankName}
                       </h3>
-                      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
                         <span className="capitalize font-semibold text-slate-700 dark:text-slate-300">
                           {acc.accountType}
                         </span>
@@ -213,10 +213,10 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
                   <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition">
                     <button
                       onClick={() => openEditModal(acc)}
-                      className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl hover:bg-white/80 dark:hover:bg-slate-800 transition"
+                      className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-white/80 dark:hover:bg-slate-800 transition"
                       title="Edit Account"
                     >
-                      <Edit3 className="w-4 h-4" />
+                      <Edit3 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => {
@@ -224,17 +224,17 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
                           deleteAccount(acc.id);
                         }
                       }}
-                      className="p-1.5 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-white/80 dark:hover:bg-slate-800 transition"
+                      className="p-1 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-white/80 dark:hover:bg-slate-800 transition"
                       title="Delete Account"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
 
                 {/* Balance Card Section */}
-                <div className="mt-5 p-4 rounded-2xl bg-white/90 dark:bg-slate-850/90 border border-slate-200/70 dark:border-slate-750 backdrop-blur-sm">
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mb-1 flex items-center justify-between">
+                <div className="mt-3 p-3 rounded-xl bg-white/90 dark:bg-slate-850/90 border border-slate-200/70 dark:border-slate-750 backdrop-blur-sm">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mb-0.5 flex items-center justify-between">
                     <span className="font-medium">Current Balance:</span>
                     {!isQuickEditing && (
                       <button
@@ -242,7 +242,7 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
                           setQuickEditId(acc.id);
                           setQuickBalance(acc.balance);
                         }}
-                        className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-bold"
+                        className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-bold"
                       >
                         Quick Edit
                       </button>
@@ -277,7 +277,7 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
                       </button>
                     </div>
                   ) : (
-                    <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+                    <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
                       {formatCurrency(acc.balance)}
                     </div>
                   )}

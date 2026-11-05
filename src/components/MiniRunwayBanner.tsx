@@ -20,25 +20,25 @@ export const MiniRunwayBanner: React.FC<MiniRunwayBannerProps> = ({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-50/90 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/40 border border-indigo-200/70 dark:border-slate-800 p-3.5 sm:p-5 shadow-sm mb-6 animate-in fade-in duration-200">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-indigo-50/90 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/40 border border-indigo-200/70 dark:border-slate-800 p-2.5 sm:p-3 shadow-xs mb-4 animate-in fade-in duration-150">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         {/* Left: Runway headline */}
         <div className="space-y-0.5">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/40 text-[11px] font-bold">
+          <div className="flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/40 text-[10px] font-bold">
               <Clock className="w-3 h-3 text-indigo-500 shrink-0" />
               <span>Survival Runway</span>
             </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
+            <span className="text-[11px] text-slate-500 dark:text-slate-400">
               Until <strong className="text-slate-800 dark:text-slate-200 font-semibold">{survivalAnalysis.runwayDate}</strong>
             </span>
           </div>
 
-          <div className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-baseline flex-wrap gap-2">
-            <span className="text-indigo-600 dark:text-amber-400">
+          <div className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-baseline flex-wrap gap-1.5">
+            <span className="text-indigo-600 dark:text-indigo-400">
               {survivalAnalysis.monthsRemaining} months {survivalAnalysis.daysRemaining} days
             </span>
-            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
               (Lean: {survivalAnalysis.essentialMonthsRemaining}m {survivalAnalysis.essentialDaysRemaining}d)
             </span>
           </div>
