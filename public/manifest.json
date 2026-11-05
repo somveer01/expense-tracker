@@ -1,11 +1,12 @@
 {
-  "name": "SurvivaTrack - Layoff Runway & Financial Survival App",
+  "name": "SurvivaTrack - Layoff Runway & Expense Tracker",
   "short_name": "SurvivaTrack",
-  "description": "Offline Layoff Runway & Financial Survival Calculator for Job Seekers",
+  "description": "100% Offline Android Layoff Runway & Financial Survival App",
   "start_url": "./",
   "scope": "./",
+  "id": "com.somveer.survivatrack",
   "display": "standalone",
-  "background_color": "#0f172a",
+  "background_color": "#0B0F19",
   "theme_color": "#4f46e5",
   "orientation": "portrait-primary",
   "icons": [
@@ -15,5 +16,6 @@
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["finance", "productivity", "utilities"]
 }
