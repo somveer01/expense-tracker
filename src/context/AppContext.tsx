@@ -37,6 +37,7 @@ interface AppContextType {
   getBudgetForMonth: (monthKey: string) => MonthlyBudgetDeclaration;
   saveMonthBudget: (monthKey: string, categories: BudgetCategory[]) => void;
   copyBudgetFromPreviousMonth: (targetMonthKey: string) => void;
+  renameCategory: (categoryId: string, newName: string) => void;
 
   // Daily Expenses
   dailyExpenses: DailyExpense[];
@@ -63,17 +64,19 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const DEFAULT_BUDGET_CATEGORIES: BudgetCategory[] = [
-  { id: 'cat-rent', name: 'House / Apartment Rent', budgetedAmount: 12000, isEssential: true, icon: 'Home' },
-  { id: 'cat-emi', name: 'Loan & Vehicle EMI', budgetedAmount: 5000, isEssential: true, icon: 'CreditCard' },
-  { id: 'cat-grocery', name: 'Food & Groceries', budgetedAmount: 7000, isEssential: true, icon: 'ShoppingBag' },
-  { id: 'cat-gas', name: 'LPG Gas / Cooking Fuel', budgetedAmount: 1000, isEssential: true, icon: 'Flame' },
-  { id: 'cat-water', name: 'Water & Utilities', budgetedAmount: 400, isEssential: true, icon: 'Droplets' },
-  { id: 'cat-electric', name: 'Electricity Bill', budgetedAmount: 1500, isEssential: true, icon: 'Zap' },
-  { id: 'cat-recharge', name: 'Mobile & Wi-Fi Recharge', budgetedAmount: 899, isEssential: true, icon: 'Wifi' },
-  { id: 'cat-daily', name: 'Daily Essentials & Dairy', budgetedAmount: 2500, isEssential: true, icon: 'Coffee' },
-  { id: 'cat-medical', name: 'Healthcare & Medicines', budgetedAmount: 1500, isEssential: true, icon: 'HeartPulse' },
-  { id: 'cat-misc', name: 'Emergency & Miscellaneous', budgetedAmount: 2000, isEssential: false, icon: 'MoreHorizontal' },
-  { id: 'cat-out', name: 'Dining Out & Entertainment (Discretionary)', budgetedAmount: 1500, isEssential: false, icon: 'Film' },
+  { id: 'cat-home-emi', name: 'Home For EMI', budgetedAmount: 15000, isEssential: true, icon: 'Home' },
+  { id: 'cat-fees-shivansh', name: 'Fees Shivansh', budgetedAmount: 5000, isEssential: true, icon: 'GraduationCap' },
+  { id: 'cat-lic', name: 'Lic', budgetedAmount: 3000, isEssential: true, icon: 'ShieldCheck' },
+  { id: 'cat-recharge', name: 'Recharge', budgetedAmount: 899, isEssential: true, icon: 'Smartphone' },
+  { id: 'cat-food', name: 'Food', budgetedAmount: 8000, isEssential: true, icon: 'ShoppingBag' },
+  { id: 'cat-water-bill', name: 'water bill', budgetedAmount: 400, isEssential: true, icon: 'Droplets' },
+  { id: 'cat-electriccity', name: 'Electriccity', budgetedAmount: 2000, isEssential: true, icon: 'Zap' },
+  { id: 'cat-gas', name: 'Gas', budgetedAmount: 1000, isEssential: true, icon: 'Flame' },
+  { id: 'cat-medical', name: 'Medical', budgetedAmount: 1500, isEssential: true, icon: 'HeartPulse' },
+  { id: 'cat-milk', name: 'Milk', budgetedAmount: 2000, isEssential: true, icon: 'Coffee' },
+  { id: 'cat-mantitance', name: 'Mantitance', budgetedAmount: 1500, isEssential: true, icon: 'Wrench' },
+  { id: 'cat-traval', name: 'Traval', budgetedAmount: 2500, isEssential: false, icon: 'Car' },
+  { id: 'cat-wifi', name: 'Wifi', budgetedAmount: 999, isEssential: true, icon: 'Wifi' },
 ];
 
 const getCurrentMonthKey = () => {
@@ -145,8 +148,8 @@ const getSampleExpenses = (): DailyExpense[] => [
   {
     id: 'exp-1',
     date: new Date().toISOString().split('T')[0],
-    categoryId: 'cat-grocery',
-    categoryName: 'Food & Groceries',
+    categoryId: 'cat-food',
+    categoryName: 'Food',
     amount: 1450,
     title: 'Vegetables, Grains & Flour',
     bankAccountId: 'acc-2',
@@ -156,7 +159,7 @@ const getSampleExpenses = (): DailyExpense[] => [
     id: 'exp-2',
     date: new Date().toISOString().split('T')[0],
     categoryId: 'cat-gas',
-    categoryName: 'LPG Gas / Cooking Fuel',
+    categoryName: 'Gas',
     amount: 980,
     title: 'Indane LPG Refill',
     bankAccountId: 'acc-1',
@@ -166,7 +169,7 @@ const getSampleExpenses = (): DailyExpense[] => [
     id: 'exp-3',
     date: new Date().toISOString().split('T')[0],
     categoryId: 'cat-recharge',
-    categoryName: 'Mobile & Wi-Fi Recharge',
+    categoryName: 'Recharge',
     amount: 349,
     title: 'Jio 28-Day Data Plan',
     bankAccountId: 'acc-2',
@@ -228,11 +231,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       };
     };
-    return getStoredItem('budgets', defaultBudgets());
+    const stored = getStoredItem<Record<string, MonthlyBudgetDeclaration>>('budgets', defaultBudgets());
+    const currKey = getCurrentMonthKey();
+    if (stored[currKey] && stored[currKey].categories.some(c => c.id === 'cat-rent' || c.name === 'House / Apartment Rent')) {
+      const sum = DEFAULT_BUDGET_CATEGORIES.reduce((acc, c) => acc + c.budgetedAmount, 0);
+      stored[currKey] = {
+        ...stored[currKey],
+        categories: DEFAULT_BUDGET_CATEGORIES,
+        totalBudgeted: sum,
+        updatedAt: new Date().toISOString()
+      };
+    }
+    return stored;
   });
 
   const [dailyExpenses, setDailyExpenses] = useState<DailyExpense[]>(() => {
-    return getStoredItem('expenses', getSampleExpenses());
+    const stored = getStoredItem<DailyExpense[]>('expenses', getSampleExpenses());
+    return stored.map(e => {
+      if (e.categoryId === 'cat-grocery') {
+        return { ...e, categoryId: 'cat-food', categoryName: 'Food' };
+      }
+      return e;
+    });
   });
 
   // Local Storage persistence - Guaranteed to save reliably on every change
@@ -437,6 +457,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       saveMonthBudget(targetMonthKey, clonedCategories);
       showToast(`Copied budget template from prior month!`);
     }
+  };
+
+  const renameCategory = (categoryId: string, newName: string) => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+
+    setMonthlyBudgets(prev => {
+      const updated: Record<string, MonthlyBudgetDeclaration> = {};
+      for (const mKey of Object.keys(prev)) {
+        const b = prev[mKey];
+        if (b.categories.some(c => c.id === categoryId)) {
+          updated[mKey] = {
+            ...b,
+            categories: b.categories.map(c => c.id === categoryId ? { ...c, name: trimmed } : c),
+            updatedAt: new Date().toISOString()
+          };
+        } else {
+          updated[mKey] = b;
+        }
+      }
+      return updated;
+    });
+
+    setDailyExpenses(prev => prev.map(exp => {
+      if (exp.categoryId === categoryId) {
+        return { ...exp, categoryName: trimmed };
+      }
+      return exp;
+    }));
+
+    showToast(`Category renamed to "${trimmed}"`);
   };
 
   // Daily Expenses Operations
@@ -664,6 +715,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       getBudgetForMonth,
       saveMonthBudget,
       copyBudgetFromPreviousMonth,
+      renameCategory,
       dailyExpenses,
       addDailyExpense,
       updateDailyExpense,

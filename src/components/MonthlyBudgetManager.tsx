@@ -19,7 +19,12 @@ import {
   Film,
   MoreHorizontal,
   X,
-  PieChart
+  PieChart,
+  Edit2,
+  GraduationCap,
+  Smartphone,
+  Wrench,
+  Car
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { BudgetCategory } from '../types';
@@ -30,12 +35,17 @@ export const MonthlyBudgetManager: React.FC = () => {
     getBudgetForMonth, 
     saveMonthBudget, 
     copyBudgetFromPreviousMonth,
+    renameCategory,
     dailyExpenses
   } = useApp();
 
   const currentDeclaration = getBudgetForMonth(selectedMonth);
   const [categories, setCategories] = useState<BudgetCategory[]>(currentDeclaration.categories);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Rename Category State
+  const [editingCatId, setEditingCatId] = useState<string | null>(null);
+  const [editingCatName, setEditingCatName] = useState<string>('');
 
   // New Category Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -117,6 +127,17 @@ export const MonthlyBudgetManager: React.FC = () => {
     setIsAddModalOpen(false);
   };
 
+  const handleSaveRename = (catId: string) => {
+    const trimmed = editingCatName.trim();
+    if (!trimmed) {
+      setEditingCatId(null);
+      return;
+    }
+    renameCategory(catId, trimmed);
+    setCategories(prev => prev.map(c => c.id === catId ? { ...c, name: trimmed } : c));
+    setEditingCatId(null);
+  };
+
   const totalCurrent = categories.reduce((sum, c) => sum + (Number(c.budgetedAmount) || 0), 0);
   const essentialCurrent = categories
     .filter(c => c.isEssential)
@@ -125,30 +146,40 @@ export const MonthlyBudgetManager: React.FC = () => {
 
   const getCategoryIcon = (name: string) => {
     const n = name.toLowerCase();
-    if (n.includes('rent') || n.includes('flat')) return <Home className="w-4 h-4 text-amber-500" />;
-    if (n.includes('emi') || n.includes('loan')) return <CreditCard className="w-4 h-4 text-purple-500" />;
-    if (n.includes('food') || n.includes('grocery')) return <ShoppingBag className="w-4 h-4 text-emerald-500" />;
-    if (n.includes('gas') || n.includes('fuel')) return <Flame className="w-4 h-4 text-rose-500" />;
+    if (n.includes('home') || n.includes('rent') || n.includes('flat')) return <Home className="w-4 h-4 text-amber-500" />;
+    if (n.includes('fee') || n.includes('shivansh') || n.includes('school') || n.includes('college')) return <GraduationCap className="w-4 h-4 text-purple-500" />;
+    if (n.includes('lic') || n.includes('insurance')) return <ShieldCheck className="w-4 h-4 text-teal-500" />;
+    if (n.includes('recharge') || n.includes('mobile') || n.includes('phone')) return <Smartphone className="w-4 h-4 text-sky-500" />;
+    if (n.includes('food') || n.includes('grocery') || n.includes('ration')) return <ShoppingBag className="w-4 h-4 text-emerald-500" />;
     if (n.includes('water')) return <Droplets className="w-4 h-4 text-cyan-500" />;
-    if (n.includes('electric') || n.includes('power')) return <Zap className="w-4 h-4 text-yellow-500" />;
-    if (n.includes('recharge') || n.includes('wifi') || n.includes('phone')) return <Wifi className="w-4 h-4 text-indigo-500" />;
-    if (n.includes('daily') || n.includes('dairy') || n.includes('milk')) return <Coffee className="w-4 h-4 text-orange-500" />;
-    if (n.includes('medical') || n.includes('health')) return <HeartPulse className="w-4 h-4 text-red-500" />;
+    if (n.includes('electric') || n.includes('bijli') || n.includes('power')) return <Zap className="w-4 h-4 text-yellow-500" />;
+    if (n.includes('gas') || n.includes('lpg') || n.includes('fuel')) return <Flame className="w-4 h-4 text-rose-500" />;
+    if (n.includes('medical') || n.includes('medicine') || n.includes('health') || n.includes('doctor')) return <HeartPulse className="w-4 h-4 text-red-500" />;
+    if (n.includes('milk') || n.includes('dairy') || n.includes('doodh')) return <Coffee className="w-4 h-4 text-orange-500" />;
+    if (n.includes('manti') || n.includes('maint') || n.includes('repair')) return <Wrench className="w-4 h-4 text-indigo-500" />;
+    if (n.includes('traval') || n.includes('travel') || n.includes('petrol') || n.includes('diesel') || n.includes('car')) return <Car className="w-4 h-4 text-blue-500" />;
+    if (n.includes('wifi') || n.includes('broadband') || n.includes('internet')) return <Wifi className="w-4 h-4 text-violet-500" />;
+    if (n.includes('emi') || n.includes('loan')) return <CreditCard className="w-4 h-4 text-purple-500" />;
     if (n.includes('dining') || n.includes('entertainment')) return <Film className="w-4 h-4 text-pink-500" />;
     return <MoreHorizontal className="w-4 h-4 text-slate-400" />;
   };
 
   const getCategoryBg = (name: string) => {
     const n = name.toLowerCase();
-    if (n.includes('rent')) return 'bg-amber-50 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-900/40';
-    if (n.includes('emi') || n.includes('loan')) return 'bg-purple-50 dark:bg-purple-950/40 border-purple-200/60 dark:border-purple-900/40';
-    if (n.includes('food') || n.includes('grocery')) return 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-900/40';
-    if (n.includes('gas') || n.includes('fuel')) return 'bg-rose-50 dark:bg-rose-950/40 border-rose-200/60 dark:border-rose-900/40';
+    if (n.includes('home') || n.includes('rent')) return 'bg-amber-50 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-900/40';
+    if (n.includes('fee') || n.includes('shivansh')) return 'bg-purple-50 dark:bg-purple-950/40 border-purple-200/60 dark:border-purple-900/40';
+    if (n.includes('lic')) return 'bg-teal-50 dark:bg-teal-950/40 border-teal-200/60 dark:border-teal-900/40';
+    if (n.includes('recharge')) return 'bg-sky-50 dark:bg-sky-950/40 border-sky-200/60 dark:border-sky-900/40';
+    if (n.includes('food')) return 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-900/40';
     if (n.includes('water')) return 'bg-cyan-50 dark:bg-cyan-950/40 border-cyan-200/60 dark:border-cyan-900/40';
     if (n.includes('electric')) return 'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200/60 dark:border-yellow-900/40';
-    if (n.includes('recharge') || n.includes('wifi')) return 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200/60 dark:border-indigo-900/40';
-    if (n.includes('daily') || n.includes('dairy')) return 'bg-orange-50 dark:bg-orange-950/40 border-orange-200/60 dark:border-orange-900/40';
+    if (n.includes('gas')) return 'bg-rose-50 dark:bg-rose-950/40 border-rose-200/60 dark:border-rose-900/40';
     if (n.includes('medical')) return 'bg-red-50 dark:bg-red-950/40 border-red-200/60 dark:border-red-900/40';
+    if (n.includes('milk')) return 'bg-orange-50 dark:bg-orange-950/40 border-orange-200/60 dark:border-orange-900/40';
+    if (n.includes('manti') || n.includes('maint')) return 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200/60 dark:border-indigo-900/40';
+    if (n.includes('traval') || n.includes('travel')) return 'bg-blue-50 dark:bg-blue-950/40 border-blue-200/60 dark:border-blue-900/40';
+    if (n.includes('wifi')) return 'bg-violet-50 dark:bg-violet-950/40 border-violet-200/60 dark:border-violet-900/40';
+    if (n.includes('emi') || n.includes('loan')) return 'bg-purple-50 dark:bg-purple-950/40 border-purple-200/60 dark:border-purple-900/40';
     return 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700';
   };
 
@@ -296,10 +327,55 @@ export const MonthlyBudgetManager: React.FC = () => {
                   <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${catBg}`}>
                     {getCategoryIcon(cat.name)}
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-slate-900 dark:text-white text-sm truncate">
-                      {cat.name}
-                    </h3>
+                  <div className="min-w-0 flex-1">
+                    {editingCatId === cat.id ? (
+                      <div className="flex items-center gap-1.5 my-0.5">
+                        <input
+                          type="text"
+                          value={editingCatName}
+                          onChange={(e) => setEditingCatName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveRename(cat.id);
+                            if (e.key === 'Escape') setEditingCatId(null);
+                          }}
+                          autoFocus
+                          className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-indigo-500 rounded-lg px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 max-w-[200px]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleSaveRename(cat.id)}
+                          className="p-1 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-800 rounded-md transition"
+                          title="Save Name"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingCatId(null)}
+                          className="p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition"
+                          title="Cancel"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 group/edit">
+                        <h3 className="font-bold text-slate-900 dark:text-white text-sm truncate">
+                          {cat.name}
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingCatId(cat.id);
+                            setEditingCatName(cat.name);
+                          }}
+                          className="opacity-70 group-hover:opacity-100 p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                          title="Rename Category"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
 
                     <div className="flex flex-wrap items-center gap-2 mt-1">
                       <button

@@ -21,7 +21,12 @@ import {
   MoreHorizontal,
   Check,
   TrendingDown,
-  ArrowDownRight
+  ArrowDownRight,
+  GraduationCap,
+  ShieldCheck,
+  Smartphone,
+  Wrench,
+  Car
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { DailyExpense } from '../types';
@@ -71,30 +76,40 @@ export const DailyExpensesManager: React.FC<DailyExpensesManagerProps> = ({
 
   const getCategoryIcon = (name: string) => {
     const n = name.toLowerCase();
-    if (n.includes('rent') || n.includes('flat')) return <Home className="w-4 h-4 text-amber-500" />;
-    if (n.includes('emi') || n.includes('loan')) return <CreditCard className="w-4 h-4 text-purple-500" />;
-    if (n.includes('food') || n.includes('grocery')) return <ShoppingBag className="w-4 h-4 text-emerald-500" />;
-    if (n.includes('gas') || n.includes('fuel')) return <Flame className="w-4 h-4 text-rose-500" />;
+    if (n.includes('home') || n.includes('rent') || n.includes('flat')) return <Home className="w-4 h-4 text-amber-500" />;
+    if (n.includes('fee') || n.includes('shivansh') || n.includes('school') || n.includes('college')) return <GraduationCap className="w-4 h-4 text-purple-500" />;
+    if (n.includes('lic') || n.includes('insurance')) return <ShieldCheck className="w-4 h-4 text-teal-500" />;
+    if (n.includes('recharge') || n.includes('mobile') || n.includes('phone')) return <Smartphone className="w-4 h-4 text-sky-500" />;
+    if (n.includes('food') || n.includes('grocery') || n.includes('ration')) return <ShoppingBag className="w-4 h-4 text-emerald-500" />;
     if (n.includes('water')) return <Droplets className="w-4 h-4 text-cyan-500" />;
-    if (n.includes('electric') || n.includes('power')) return <Zap className="w-4 h-4 text-yellow-500" />;
-    if (n.includes('recharge') || n.includes('wifi') || n.includes('phone')) return <Wifi className="w-4 h-4 text-indigo-500" />;
-    if (n.includes('daily') || n.includes('dairy') || n.includes('milk')) return <Coffee className="w-4 h-4 text-orange-500" />;
-    if (n.includes('medical') || n.includes('health')) return <HeartPulse className="w-4 h-4 text-red-500" />;
+    if (n.includes('electric') || n.includes('bijli') || n.includes('power')) return <Zap className="w-4 h-4 text-yellow-500" />;
+    if (n.includes('gas') || n.includes('lpg') || n.includes('fuel')) return <Flame className="w-4 h-4 text-rose-500" />;
+    if (n.includes('medical') || n.includes('medicine') || n.includes('health') || n.includes('doctor')) return <HeartPulse className="w-4 h-4 text-red-500" />;
+    if (n.includes('milk') || n.includes('dairy') || n.includes('doodh')) return <Coffee className="w-4 h-4 text-orange-500" />;
+    if (n.includes('manti') || n.includes('maint') || n.includes('repair')) return <Wrench className="w-4 h-4 text-indigo-500" />;
+    if (n.includes('traval') || n.includes('travel') || n.includes('petrol') || n.includes('car')) return <Car className="w-4 h-4 text-blue-500" />;
+    if (n.includes('wifi') || n.includes('broadband') || n.includes('internet')) return <Wifi className="w-4 h-4 text-violet-500" />;
+    if (n.includes('emi') || n.includes('loan')) return <CreditCard className="w-4 h-4 text-purple-500" />;
     if (n.includes('dining') || n.includes('entertainment')) return <Film className="w-4 h-4 text-pink-500" />;
     return <MoreHorizontal className="w-4 h-4 text-slate-400" />;
   };
 
   const getCategoryBg = (name: string) => {
     const n = name.toLowerCase();
-    if (n.includes('rent')) return 'bg-amber-50 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-900/40 text-amber-600 dark:text-amber-400';
-    if (n.includes('emi') || n.includes('loan')) return 'bg-purple-50 dark:bg-purple-950/40 border-purple-200/60 dark:border-purple-900/40 text-purple-600 dark:text-purple-400';
-    if (n.includes('food') || n.includes('grocery')) return 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-400';
-    if (n.includes('gas') || n.includes('fuel')) return 'bg-rose-50 dark:bg-rose-950/40 border-rose-200/60 dark:border-rose-900/40 text-rose-600 dark:text-rose-400';
+    if (n.includes('home') || n.includes('rent')) return 'bg-amber-50 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-900/40 text-amber-600 dark:text-amber-400';
+    if (n.includes('fee') || n.includes('shivansh')) return 'bg-purple-50 dark:bg-purple-950/40 border-purple-200/60 dark:border-purple-900/40 text-purple-600 dark:text-purple-400';
+    if (n.includes('lic')) return 'bg-teal-50 dark:bg-teal-950/40 border-teal-200/60 dark:border-teal-900/40 text-teal-600 dark:text-teal-400';
+    if (n.includes('recharge')) return 'bg-sky-50 dark:bg-sky-950/40 border-sky-200/60 dark:border-sky-900/40 text-sky-600 dark:text-sky-400';
+    if (n.includes('food')) return 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-400';
     if (n.includes('water')) return 'bg-cyan-50 dark:bg-cyan-950/40 border-cyan-200/60 dark:border-cyan-900/40 text-cyan-600 dark:text-cyan-400';
     if (n.includes('electric')) return 'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200/60 dark:border-yellow-900/40 text-yellow-600 dark:text-yellow-400';
-    if (n.includes('recharge') || n.includes('wifi')) return 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200/60 dark:border-indigo-900/40 text-indigo-600 dark:text-indigo-400';
-    if (n.includes('daily') || n.includes('dairy')) return 'bg-orange-50 dark:bg-orange-950/40 border-orange-200/60 dark:border-orange-900/40 text-orange-600 dark:text-orange-400';
+    if (n.includes('gas')) return 'bg-rose-50 dark:bg-rose-950/40 border-rose-200/60 dark:border-rose-900/40 text-rose-600 dark:text-rose-400';
     if (n.includes('medical')) return 'bg-red-50 dark:bg-red-950/40 border-red-200/60 dark:border-red-900/40 text-red-600 dark:text-red-400';
+    if (n.includes('milk')) return 'bg-orange-50 dark:bg-orange-950/40 border-orange-200/60 dark:border-orange-900/40 text-orange-600 dark:text-orange-400';
+    if (n.includes('manti') || n.includes('maint')) return 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200/60 dark:border-indigo-900/40 text-indigo-600 dark:text-indigo-400';
+    if (n.includes('traval') || n.includes('travel')) return 'bg-blue-50 dark:bg-blue-950/40 border-blue-200/60 dark:border-blue-900/40 text-blue-600 dark:text-blue-400';
+    if (n.includes('wifi')) return 'bg-violet-50 dark:bg-violet-950/40 border-violet-200/60 dark:border-violet-900/40 text-violet-600 dark:text-violet-400';
+    if (n.includes('emi') || n.includes('loan')) return 'bg-purple-50 dark:bg-purple-950/40 border-purple-200/60 dark:border-purple-900/40 text-purple-600 dark:text-purple-400';
     return 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300';
   };
 
