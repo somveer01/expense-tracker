@@ -7,7 +7,12 @@ import {
   Wallet, 
   Coins, 
   Check, 
-  X
+  X,
+  CreditCard,
+  Landmark,
+  PiggyBank,
+  Smartphone,
+  ArrowUpRight
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { BankAccount } from '../types';
@@ -98,13 +103,51 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
     setQuickEditId(null);
   };
 
+  const getAccountIcon = (type: BankAccount['accountType']) => {
+    switch (type) {
+      case 'cash':
+        return <Coins className="w-5 h-5 text-amber-500" />;
+      case 'salary':
+        return <Landmark className="w-5 h-5 text-indigo-500" />;
+      case 'current':
+        return <Building2 className="w-5 h-5 text-blue-500" />;
+      case 'fd':
+        return <PiggyBank className="w-5 h-5 text-purple-500" />;
+      case 'wallet':
+        return <Smartphone className="w-5 h-5 text-rose-500" />;
+      case 'savings':
+      default:
+        return <Wallet className="w-5 h-5 text-emerald-500" />;
+    }
+  };
+
+  const getAccountCardBg = (type: BankAccount['accountType']) => {
+    switch (type) {
+      case 'salary':
+        return 'from-indigo-50/80 via-white to-slate-50 dark:from-indigo-950/20 dark:via-slate-900 dark:to-slate-900 border-indigo-200/80 dark:border-indigo-900/40';
+      case 'cash':
+        return 'from-amber-50/80 via-white to-slate-50 dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-900 border-amber-200/80 dark:border-amber-900/40';
+      case 'fd':
+        return 'from-purple-50/80 via-white to-slate-50 dark:from-purple-950/20 dark:via-slate-900 dark:to-slate-900 border-purple-200/80 dark:border-purple-900/40';
+      case 'current':
+        return 'from-blue-50/80 via-white to-slate-50 dark:from-blue-950/20 dark:via-slate-900 dark:to-slate-900 border-blue-200/80 dark:border-blue-900/40';
+      default:
+        return 'from-emerald-50/80 via-white to-slate-50 dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-900 border-emerald-200/80 dark:border-emerald-900/40';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Bank Accounts & Capital</h1>
+            <span className="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              <Wallet className="w-4 h-4" />
+            </span>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              Bank Accounts & Capital
+            </h1>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40 font-semibold">
               {accounts.length} Active
             </span>
@@ -114,16 +157,16 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <span className="text-xs text-slate-500 dark:text-slate-400 block font-medium">Total Liquid Capital:</span>
-            <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
+        <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
+          <div className="text-left sm:text-right">
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Total Liquid Capital</span>
+            <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
               {formatCurrency(survivalAnalysis.totalCapital)}
             </span>
           </div>
           <button
             onClick={openAddModal}
-            className="py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl flex items-center gap-2 transition shadow-sm shrink-0"
+            className="py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold rounded-2xl flex items-center gap-2 transition shadow-md shadow-indigo-600/20 shrink-0 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add Account</span>
@@ -131,72 +174,77 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
         </div>
       </div>
 
-      {/* Accounts Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* Modern Accounts Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         {accounts.map(acc => {
           const isQuickEditing = quickEditId === acc.id;
+          const cardGradient = getAccountCardBg(acc.accountType);
+          const percentOfTotal = survivalAnalysis.totalCapital > 0 
+            ? ((acc.balance / survivalAnalysis.totalCapital) * 100).toFixed(0) 
+            : 0;
 
           return (
             <div 
               key={acc.id} 
-              className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-3xl p-5 shadow-sm hover:shadow transition flex flex-col justify-between group"
+              className={`relative overflow-hidden rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-200 bg-gradient-to-br border ${cardGradient} flex flex-col justify-between group`}
             >
               <div>
+                {/* Header row */}
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-slate-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-slate-700">
-                      {acc.accountType === 'cash' ? (
-                        <Coins className="w-5 h-5 text-amber-500" />
-                      ) : (
-                        <Building2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                      )}
+                    <div className="w-11 h-11 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center shadow-xs border border-slate-200/60 dark:border-slate-700/60">
+                      {getAccountIcon(acc.accountType)}
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900 dark:text-white text-base leading-snug">{acc.bankName}</h3>
+                      <h3 className="font-bold text-slate-900 dark:text-white text-base leading-snug tracking-tight">
+                        {acc.bankName}
+                      </h3>
                       <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        <span className="capitalize">{acc.accountType}</span>
+                        <span className="capitalize font-semibold text-slate-700 dark:text-slate-300">
+                          {acc.accountType}
+                        </span>
                         {acc.accountNumberLast4 && (
-                          <span>• A/C: •••• {acc.accountNumberLast4}</span>
+                          <span>•••• {acc.accountNumberLast4}</span>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-1 opacity-80 group-hover:opacity-100 transition">
+                  <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition">
                     <button
                       onClick={() => openEditModal(acc)}
-                      className="p-1.5 text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl hover:bg-white/80 dark:hover:bg-slate-800 transition"
                       title="Edit Account"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
+                      <Edit3 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => {
-                        if (confirm(`Are you sure you want to remove ${acc.bankName}?`)) {
+                        if (window.confirm(`Are you sure you want to remove ${acc.bankName}?`)) {
                           deleteAccount(acc.id);
                         }
                       }}
-                      className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-                      title="Delete"
+                      className="p-1.5 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-white/80 dark:hover:bg-slate-800 transition"
+                      title="Delete Account"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
 
-                {/* Balance Section */}
-                <div className="mt-5 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/50">
+                {/* Balance Card Section */}
+                <div className="mt-5 p-4 rounded-2xl bg-white/90 dark:bg-slate-850/90 border border-slate-200/70 dark:border-slate-750 backdrop-blur-sm">
                   <div className="text-xs text-slate-500 dark:text-slate-400 mb-1 flex items-center justify-between">
-                    <span>Available Balance:</span>
+                    <span className="font-medium">Current Balance:</span>
                     {!isQuickEditing && (
                       <button
                         onClick={() => {
                           setQuickEditId(acc.id);
                           setQuickBalance(acc.balance);
                         }}
-                        className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold"
+                        className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-bold"
                       >
-                        Update
+                        Quick Edit
                       </button>
                     )}
                   </div>
@@ -204,42 +252,43 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
                   {isQuickEditing ? (
                     <div className="flex items-center gap-2 mt-1">
                       <div className="relative flex-1">
-                        <span className="absolute left-2.5 top-1.5 text-xs text-slate-400">₹</span>
+                        <span className="absolute left-2.5 top-1.5 text-xs text-slate-400 font-bold">₹</span>
                         <input
                           type="number"
                           autoFocus
                           value={quickBalance}
                           onChange={(e) => setQuickBalance(e.target.value === '' ? '' : Number(e.target.value))}
-                          className="w-full pl-6 pr-2 py-1 bg-white dark:bg-slate-900 border border-indigo-500 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none"
+                          className="w-full pl-6 pr-2 py-1 bg-white dark:bg-slate-900 border border-indigo-500 rounded-lg text-sm font-bold text-slate-900 dark:text-white focus:outline-none"
                         />
                       </div>
                       <button
                         onClick={() => handleQuickBalanceSave(acc.id)}
-                        className="p-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg"
+                        className="p-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition"
                         title="Save"
                       >
                         <Check className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setQuickEditId(null)}
-                        className="p-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg"
+                        className="p-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition"
                         title="Cancel"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
-                    <div className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
+                    <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
                       {formatCurrency(acc.balance)}
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400 flex justify-between">
-                <span>Updated: {new Date(acc.updatedAt).toLocaleDateString('en-US')}</span>
-                <span className="text-slate-500 dark:text-slate-400">
-                  {((acc.balance / (survivalAnalysis.totalCapital || 1)) * 100).toFixed(0)}% of total
+              {/* Bottom Info Bar */}
+              <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 text-[11px] text-slate-400 dark:text-slate-500 flex justify-between items-center">
+                <span>Updated: {new Date(acc.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                <span className="font-semibold text-slate-600 dark:text-slate-400 bg-white/70 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200/60 dark:border-transparent">
+                  {percentOfTotal}% of total
                 </span>
               </div>
             </div>
@@ -249,12 +298,12 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
         {/* Add Account Card */}
         <div 
           onClick={openAddModal}
-          className="border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition min-h-[190px] group bg-white/40 dark:bg-slate-900/30 hover:bg-white dark:hover:bg-slate-900/60"
+          className="border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition min-h-[210px] group bg-white/40 dark:bg-slate-900/30 hover:bg-white dark:hover:bg-slate-900/60"
         >
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3 group-hover:scale-105 transition">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3 group-hover:scale-105 transition shadow-xs">
             <Plus className="w-6 h-6" />
           </div>
-          <p className="font-semibold text-slate-700 dark:text-slate-300 text-sm">Add New Bank Account or Cash</p>
+          <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Add Bank Account or Cash</p>
           <p className="text-xs text-slate-400 mt-1">PNB, HDFC, SBI, Cash in Hand, etc.</p>
         </div>
       </div>
@@ -262,85 +311,123 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
       {/* Add / Edit Account Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl">
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-800 dark:hover:text-white p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-              {editingAccount ? 'Edit Account' : 'Add Bank Account or Cash Reserve'}
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/80 dark:border-emerald-800/40">
+                <Wallet className="w-5 h-5" />
+              </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Bank or Source Name</label>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                  {editingAccount ? 'Edit Bank Account' : 'Add Bank Account or Cash'}
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Update balances to calculate exact survival runway
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Bank or Reserve Name <span className="text-rose-500">*</span>
+                </label>
                 <input
                   type="text"
                   required
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
                   placeholder="e.g. HDFC Bank, PNB, Cash in Hand"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:bg-white focus:border-indigo-500 outline-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
                 />
+              </div>
+
+              {/* Account Type Selector Chips */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Account Type
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'savings', label: 'Savings', icon: Wallet },
+                    { id: 'salary', label: 'Salary', icon: Landmark },
+                    { id: 'cash', label: 'Cash', icon: Coins },
+                    { id: 'current', label: 'Current', icon: Building2 },
+                    { id: 'fd', label: 'Fixed Dep', icon: PiggyBank },
+                    { id: 'wallet', label: 'Wallet', icon: Smartphone }
+                  ].map(item => {
+                    const isSelected = accountType === item.id;
+                    const IconComponent = item.icon;
+                    return (
+                      <button
+                        type="button"
+                        key={item.id}
+                        onClick={() => setAccountType(item.id as any)}
+                        className={`p-2 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300'
+                        }`}
+                      >
+                        <IconComponent className="w-3.5 h-3.5" />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Account Type</label>
-                  <select
-                    value={accountType}
-                    onChange={(e) => setAccountType(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:bg-white focus:border-indigo-500 outline-none"
-                  >
-                    <option value="savings">Savings Account</option>
-                    <option value="salary">Salary Account</option>
-                    <option value="cash">Cash in Hand</option>
-                    <option value="current">Current Account</option>
-                    <option value="fd">Fixed Deposit</option>
-                    <option value="wallet">Digital Wallet</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Last 4 Digits</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Last 4 Digits (Optional)
+                  </label>
                   <input
                     type="text"
                     maxLength={4}
                     value={accountNumberLast4}
-                    onChange={(e) => setAccountNumberLast4(e.target.value)}
-                    placeholder="e.g. 4589"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:bg-white focus:border-indigo-500 outline-none"
+                    onChange={(e) => setAccountNumberLast4(e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder="4589"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-indigo-500 transition"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Available Balance (₹) <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-slate-400 font-bold text-sm">₹</span>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      value={balance}
+                      onChange={(e) => setBalance(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="50,000"
+                      className="w-full pl-7 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-indigo-500 transition"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Available Balance (₹)</label>
-                <input
-                  type="number"
-                  required
-                  min={0}
-                  value={balance}
-                  onChange={(e) => setBalance(e.target.value === '' ? '' : Number(e.target.value))}
-                  placeholder="₹ 50,000"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:bg-white focus:border-indigo-500 outline-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-xl transition"
+                  className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition shadow-sm"
+                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold rounded-xl transition shadow-md shadow-indigo-600/20"
                 >
                   {editingAccount ? 'Save Changes' : 'Add Account'}
                 </button>

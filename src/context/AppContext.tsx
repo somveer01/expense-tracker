@@ -41,7 +41,8 @@ interface AppContextType {
   // Daily Expenses
   dailyExpenses: DailyExpense[];
   addDailyExpense: (exp: Omit<DailyExpense, 'id' | 'createdAt'>, deductFromAccount?: boolean) => void;
-  deleteDailyExpense: (id: string) => void;
+  updateDailyExpense: (id: string, exp: Partial<DailyExpense>, adjustAccountBalance?: boolean) => void;
+  deleteDailyExpense: (id: string, refundToAccount?: boolean) => void;
 
   // Computed Survival Analysis
   survivalAnalysis: SurvivalAnalysis;
@@ -458,7 +459,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast(`Expense of ₹${exp.amount.toLocaleString('en-IN')} logged!`);
   };
 
-  const deleteDailyExpense = (id: string) => {
+  const updateDailyExpense = (id: string, updated: Partial<DailyExpense>, adjustAccountBalance = true) => {
+    const existing = dailyExpenses.find(e => e.id === id);
+    if (!existing) return;
+
+    const oldAmount = existing.amount;
+    const oldAccountId = existing.bankAccountId;
+    const newAmount = updated.amount !== undefined ? updated.amount : oldAmount;
+    const newAccountId = updated.bankAccountId !== undefined ? updated.bankAccountId : oldAccountId;
+
+    setDailyExpenses(prev => prev.map(e => e.id === id ? { ...e, ...updated } : e));
+
+    if (adjustAccountBalance && (oldAccountId || newAccountId)) {
+      setAccounts(prev => prev.map(acc => {
+        let balance = acc.balance;
+        if (oldAccountId === newAccountId && acc.id === oldAccountId) {
+          balance = Math.max(0, balance + oldAmount - newAmount);
+        } else {
+          if (acc.id === oldAccountId) {
+            balance = balance + oldAmount;
+          }
+          if (acc.id === newAccountId) {
+            balance = Math.max(0, balance - newAmount);
+          }
+        }
+        return { ...acc, balance, updatedAt: new Date().toISOString() };
+      }));
+    }
+
+    showToast(`Expense "${updated.title || existing.title}" updated!`);
+  };
+
+  const deleteDailyExpense = (id: string, refundToAccount = true) => {
+    const existing = dailyExpenses.find(e => e.id === id);
+    if (existing && refundToAccount && existing.bankAccountId) {
+      setAccounts(prev => prev.map(acc => {
+        if (acc.id === existing.bankAccountId) {
+          return { ...acc, balance: acc.balance + existing.amount, updatedAt: new Date().toISOString() };
+        }
+        return acc;
+      }));
+    }
     setDailyExpenses(prev => prev.filter(e => e.id !== id));
     showToast(`Expense deleted.`);
   };
@@ -625,6 +666,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       copyBudgetFromPreviousMonth,
       dailyExpenses,
       addDailyExpense,
+      updateDailyExpense,
       deleteDailyExpense,
       survivalAnalysis,
       resetToSampleData,
