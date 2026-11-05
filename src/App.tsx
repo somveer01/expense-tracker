@@ -95,7 +95,7 @@ export const App: React.FC = () => {
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 sm:pb-12 min-w-0">
         {/* Compact Runway Banner on Sub-Tabs */}
-        {activeTab !== 'dashboard' && (
+        {activeTab !== 'dashboard' && activeTab !== 'budget' && (
           <MiniRunwayBanner 
             setActiveTab={setActiveTab}
             onOpenSimulator={() => setIsSimulatorOpen(true)}

@@ -20,6 +20,9 @@ import {
   MoreHorizontal,
   X,
   PieChart,
+  Target,
+  TrendingDown,
+  ArrowDownRight,
   Edit2,
   GraduationCap,
   Smartphone,
@@ -143,11 +146,9 @@ export const MonthlyBudgetManager: React.FC = () => {
     setEditingCatId(null);
   };
 
-  const totalCurrent = categories.reduce((sum, c) => sum + (Number(c.budgetedAmount) || 0), 0);
-  const essentialCurrent = categories
-    .filter(c => c.isEssential)
-    .reduce((sum, c) => sum + (Number(c.budgetedAmount) || 0), 0);
-  const discretionaryCurrent = totalCurrent - essentialCurrent;
+    const totalPlanned = categories.reduce((sum, c) => sum + (Number(c.budgetedAmount) || 0), 0);
+  const totalActual = categories.reduce((sum, c) => sum + getSpentForCategory(c.id), 0);
+  const totalDifference = totalPlanned - totalActual;
 
   const getCategoryIcon = (name: string) => {
     const n = name.toLowerCase();
@@ -244,59 +245,79 @@ export const MonthlyBudgetManager: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI Cards: Total Burn vs Essential vs Discretionary (Compact) */}
+      {/* 3 Summary Tabs / Cards: Plan, Actual, Difference */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
-        {/* Total Burn */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-3.5 shadow-xs space-y-0.5">
-          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block">
-            Declared Budget ({selectedMonth})
-          </span>
-          <div className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-            {formatCurrency(totalCurrent)}
-            <span className="text-xs font-normal text-slate-500 dark:text-slate-400 ml-1">/mo</span>
-          </div>
-          <p className="text-[10px] text-slate-400">
-            Daily: ~{formatCurrency(Math.round(totalCurrent / 30))}/day
-          </p>
-        </div>
-
-        {/* Essential Only */}
-        <div className="bg-gradient-to-br from-emerald-50/70 via-white to-slate-50 dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-900 border border-emerald-200/80 dark:border-emerald-900/40 rounded-2xl p-3.5 shadow-xs space-y-0.5">
+        {/* Tab 1: Total Plan */}
+        <div className="bg-gradient-to-br from-indigo-50/70 via-white to-slate-50 dark:from-indigo-950/20 dark:via-slate-900 dark:to-slate-900 border border-indigo-200/80 dark:border-indigo-900/40 rounded-2xl p-3.5 shadow-xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1 uppercase tracking-wide">
-              <ShieldCheck className="w-3 h-3" />
-              Essential Needs
+            <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide flex items-center gap-1">
+              <Target className="w-3.5 h-3.5" />
+              Total Plan ({selectedMonth})
             </span>
-            <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.2 rounded-full">
-              {totalCurrent > 0 ? ((essentialCurrent / totalCurrent) * 100).toFixed(0) : 0}%
+            <span className="text-[10px] bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold px-1.5 py-0.2 rounded-full">
+              {categories.length} Categories
             </span>
           </div>
-          <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
-            {formatCurrency(essentialCurrent)}
+          <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            {formatCurrency(totalPlanned)}
             <span className="text-xs font-normal text-slate-500 dark:text-slate-400 ml-1">/mo</span>
           </div>
           <p className="text-[10px] text-slate-500 dark:text-slate-400">
-            Rent, Groceries, EMIs, Utilities
+            Declared monthly plan amount
           </p>
         </div>
 
-        {/* Discretionary */}
-        <div className="bg-gradient-to-br from-amber-50/70 via-white to-slate-50 dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-900 border border-amber-200/80 dark:border-amber-900/40 rounded-2xl p-3.5 shadow-xs space-y-0.5">
+        {/* Tab 2: Total Actual */}
+        <div className="bg-gradient-to-br from-amber-50/70 via-white to-slate-50 dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-900 border border-amber-200/80 dark:border-amber-900/40 rounded-2xl p-3.5 shadow-xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1 uppercase tracking-wide">
-              <ShieldAlert className="w-3 h-3" />
-              Discretionary
+            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide flex items-center gap-1">
+              <TrendingDown className="w-3.5 h-3.5" />
+              Total Actual Spent
             </span>
             <span className="text-[10px] bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold px-1.5 py-0.2 rounded-full">
-              {totalCurrent > 0 ? ((discretionaryCurrent / totalCurrent) * 100).toFixed(0) : 0}%
+              {monthExpenses.length} Logged
             </span>
           </div>
-          <div className="text-xl font-black text-amber-600 dark:text-amber-400 tracking-tight">
-            {formatCurrency(discretionaryCurrent)}
+          <div className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 tracking-tight">
+            {formatCurrency(totalActual)}
             <span className="text-xs font-normal text-slate-500 dark:text-slate-400 ml-1">/mo</span>
           </div>
           <p className="text-[10px] text-slate-500 dark:text-slate-400">
-            Dining, shopping & lifestyle
+            Real expenditure from Daily Expenses
+          </p>
+        </div>
+
+        {/* Tab 3: Total Difference */}
+        <div className={`bg-gradient-to-br rounded-2xl p-3.5 shadow-xs space-y-1 border ${
+          totalDifference >= 0
+            ? 'from-emerald-50/70 via-white to-slate-50 dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-900 border-emerald-200/80 dark:border-emerald-900/40'
+            : 'from-rose-50/70 via-white to-slate-50 dark:from-rose-950/20 dark:via-slate-900 dark:to-slate-900 border-rose-200/80 dark:border-rose-900/40'
+        }`}>
+          <div className="flex items-center justify-between">
+            <span className={`text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 ${
+              totalDifference >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+            }`}>
+              <ArrowDownRight className="w-3.5 h-3.5" />
+              Total Difference
+            </span>
+            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
+              totalDifference >= 0
+                ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
+                : 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300'
+            }`}>
+              {totalDifference >= 0 ? '✓ Remaining (बचत)' : '⚠ Over Budget (अधिक)'}
+            </span>
+          </div>
+          <div className={`text-xl sm:text-2xl font-black tracking-tight ${
+            totalDifference >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+          }`}>
+            {totalDifference >= 0 ? '+' : ''}{formatCurrency(totalDifference)}
+            <span className="text-xs font-normal text-slate-500 dark:text-slate-400 ml-1">
+              {totalDifference >= 0 ? 'left' : 'over'}
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400">
+            {totalDifference >= 0 ? 'Within planned expenditure' : `Exceeded plan by ${formatCurrency(Math.abs(totalDifference))}`}
           </p>
         </div>
       </div>
@@ -307,7 +328,7 @@ export const MonthlyBudgetManager: React.FC = () => {
           <div>
             <h2 className="font-extrabold text-slate-900 dark:text-white text-base">Category Allocations</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Type your planned monthly amount. Actual expenses for this month are compared automatically.
+              Only Plan Amount is editable. Actual Spent comes from Daily Expenses, and Difference is calculated automatically.
             </p>
           </div>
           <div className="text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold self-start sm:self-center">
@@ -315,21 +336,33 @@ export const MonthlyBudgetManager: React.FC = () => {
           </div>
         </div>
 
-        <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
+        {/* Desktop Table Column Headers for Plan, Actual, Difference */}
+        <div className="hidden sm:flex items-center justify-between px-6 py-2.5 bg-slate-100/70 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          <div>Category Name</div>
+          <div className="flex items-center gap-3 pr-10">
+            <div className="w-32 text-right">Plan (Editable)</div>
+            <div className="w-28 text-right">Actual Spent</div>
+            <div className="w-28 text-right">Difference</div>
+          </div>
+        </div>
+      <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
           {categories.map(cat => {
             const spent = getSpentForCategory(cat.id);
-            const utilization = cat.budgetedAmount > 0 
-              ? Math.min(100, Math.round((spent / cat.budgetedAmount) * 100))
+            const planned = Number(cat.budgetedAmount) || 0;
+            const diff = planned - spent;
+            const utilization = planned > 0 
+              ? Math.min(100, Math.round((spent / planned) * 100))
               : spent > 0 ? 100 : 0;
             const catBg = getCategoryBg(cat.name);
 
             return (
               <div 
                 key={cat.id} 
-                className="p-4 sm:px-6 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 group"
+                className="p-3.5 sm:p-5 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 group"
               >
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${catBg}`}>
+                {/* Left: Category Icon, Name, and Essential Badge */}
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border ${catBg}`}>
                     {getCategoryIcon(cat.name)}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -374,7 +407,7 @@ export const MonthlyBudgetManager: React.FC = () => {
                             setEditingCatId(cat.id);
                             setEditingCatName(cat.name);
                           }}
-                          className="opacity-70 group-hover:opacity-100 p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                          className="opacity-70 group-hover:opacity-100 p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
                           title="Rename Category"
                         >
                           <Edit2 className="w-3 h-3" />
@@ -392,24 +425,19 @@ export const MonthlyBudgetManager: React.FC = () => {
                             : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:text-slate-800'
                         }`}
                       >
-                        {cat.isEssential ? '✓ Essential Need' : 'Optional Want'}
+                        {cat.isEssential ? '✓ Essential' : 'Optional'}
                       </button>
 
-                      {cat.budgetedAmount > 0 && (
+                      {planned > 0 && (
                         <span className="text-[10px] text-slate-400 font-medium">
-                          {((cat.budgetedAmount / (totalCurrent || 1)) * 100).toFixed(0)}% of total
+                          {((planned / (totalPlanned || 1)) * 100).toFixed(0)}% of plan
                         </span>
                       )}
-
-                      {/* Actual Spend Mini Indicator */}
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        • Actual Spent: <strong className={spent > cat.budgetedAmount && cat.budgetedAmount > 0 ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-slate-700 dark:text-slate-300 font-bold'}>{formatCurrency(spent)}</strong>
-                      </span>
                     </div>
 
-                    {/* Mini category burn bar */}
-                    {cat.budgetedAmount > 0 && (
-                      <div className="w-36 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mt-2 overflow-hidden">
+                    {/* Category burn mini bar */}
+                    {planned > 0 && (
+                      <div className="w-32 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mt-1.5 overflow-hidden">
                         <div 
                           className={`h-full rounded-full transition-all duration-300 ${
                             utilization > 100 ? 'bg-rose-500' : utilization > 80 ? 'bg-amber-500' : 'bg-emerald-500'
@@ -419,22 +447,101 @@ export const MonthlyBudgetManager: React.FC = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Mobile-only delete button */}
+                  <div className="sm:hidden shrink-0">
+                    <button
+                      onClick={() => {
+                        requestDeleteConfirm({
+                          title: 'Delete Budget Category',
+                          message: `Are you sure you want to delete category "${cat.name}"?`,
+                          onConfirm: () => handleDeleteCategory(cat.id, cat.name)
+                        });
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-rose-50 dark:hover:bg-slate-800 transition"
+                      title="Remove Category"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
-                {/* Amount Input & Delete Action */}
-                <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
-                  <div className="relative w-36 sm:w-44">
-                    <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">₹</span>
+                {/* Mobile View: 3 Boxes side-by-side (Plan, Actual, Difference) */}
+                <div className="grid grid-cols-3 gap-2 mt-1 sm:hidden w-full pt-2 border-t border-slate-100 dark:border-slate-800/60">
+                  {/* Plan (Editable) */}
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1">Plan (Edit)</span>
+                    <div className="relative">
+                      <span className="absolute left-2 top-2 text-xs font-bold text-slate-400">₹</span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={cat.budgetedAmount === 0 ? '' : cat.budgetedAmount}
+                        onChange={(e) => handleAmountChange(cat.id, e.target.value)}
+                        placeholder="0"
+                        className="w-full pl-5 pr-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white text-right focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Actual Spent (Read-only) */}
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1">Actual</span>
+                    <div className="px-2 py-1.5 bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 text-right truncate">
+                      {formatCurrency(spent)}
+                    </div>
+                  </div>
+
+                  {/* Difference (Read-only) */}
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1">Diff</span>
+                    <div className={`px-2 py-1.5 border rounded-xl text-xs font-black text-right truncate ${
+                      diff >= 0 
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/80 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400' 
+                        : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200/80 dark:border-rose-800/40 text-rose-600 dark:text-rose-400'
+                    }`}>
+                      {diff >= 0 ? `+${formatCurrency(diff)}` : `-${formatCurrency(Math.abs(diff))}`}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Desktop View: Plan Input, Actual Spent, Difference & Delete Action */}
+                <div className="hidden sm:flex items-center gap-3 self-end sm:self-center shrink-0">
+                  {/* Plan (Editable) */}
+                  <div className="relative w-32">
+                    <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">₹</span>
                     <input
                       type="number"
                       min={0}
                       value={cat.budgetedAmount === 0 ? '' : cat.budgetedAmount}
                       onChange={(e) => handleAmountChange(cat.id, e.target.value)}
                       placeholder="0"
-                      className="w-full pl-7 pr-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white text-right focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition"
+                      className="w-full pl-6 pr-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-white text-right focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition"
+                      title="Editable monthly planned budget"
                     />
                   </div>
 
+                  {/* Actual Spent (Read-only) */}
+                  <div 
+                    className="w-28 px-2.5 py-1.5 bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 text-right cursor-not-allowed select-none"
+                    title="Actual expenses logged for this category"
+                  >
+                    {formatCurrency(spent)}
+                  </div>
+
+                  {/* Difference (Read-only) */}
+                  <div 
+                    className={`w-28 px-2.5 py-1.5 border rounded-xl text-xs sm:text-sm font-black text-right cursor-not-allowed select-none ${
+                      diff >= 0 
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/80 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400' 
+                        : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200/80 dark:border-rose-800/40 text-rose-600 dark:text-rose-400'
+                    }`}
+                    title={diff >= 0 ? `Remaining: ${formatCurrency(diff)}` : `Over budget by: ${formatCurrency(Math.abs(diff))}`}
+                  >
+                    {diff >= 0 ? `+${formatCurrency(diff)}` : `-${formatCurrency(Math.abs(diff))}`}
+                  </div>
+
+                  {/* Delete Button */}
                   <button
                     onClick={() => {
                       requestDeleteConfirm({
@@ -443,7 +550,7 @@ export const MonthlyBudgetManager: React.FC = () => {
                         onConfirm: () => handleDeleteCategory(cat.id, cat.name)
                       });
                     }}
-                    className="p-2 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-rose-50 dark:hover:bg-slate-800 transition"
+                    className="p-1.5 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-rose-50 dark:hover:bg-slate-800 transition cursor-pointer"
                     title="Remove Category"
                   >
                     <Trash2 className="w-4 h-4" />
