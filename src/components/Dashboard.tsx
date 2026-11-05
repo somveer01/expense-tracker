@@ -11,7 +11,12 @@ import {
   ArrowUpRight, 
   Clock, 
   HeartHandshake,
-  Info
+  Info,
+  Calendar,
+  AlertTriangle,
+  ArrowRight,
+  ShieldCheck,
+  Zap
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -43,242 +48,288 @@ export const Dashboard: React.FC<DashboardProps> = ({
     ? Math.round((survivalAnalysis.totalReceivables / (survivalAnalysis.monthlyBurnRate / 30)))
     : 0;
 
+  // Days left in current month for daily budget allowance
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const currentDay = now.getDate();
+  const remainingDaysInMonth = Math.max(1, daysInMonth - currentDay + 1);
+  const remainingBudget = Math.max(0, survivalAnalysis.monthlyBurnRate - survivalAnalysis.actualSpentThisMonth);
+  const safeDailyAllowance = Math.round(remainingBudget / remainingDaysInMonth);
+
+  // Health status determination
+  const isHealthyRunway = survivalAnalysis.monthsRemaining >= 6;
+  const isModerateRunway = survivalAnalysis.monthsRemaining >= 3 && survivalAnalysis.monthsRemaining < 6;
+  const isCriticalRunway = survivalAnalysis.monthsRemaining < 3 && survivalAnalysis.totalCapital > 0;
+
   return (
     <div className="space-y-6">
-      {/* Empty State / Welcome Guide when all data is cleared */}
+      {/* 1. Onboarding / Blank Slate State (If all data cleared) */}
       {accounts.length === 0 ? (
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-50/90 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 border border-indigo-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-sm">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-50/90 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/40 border border-indigo-200/80 dark:border-slate-800 p-6 sm:p-10 shadow-sm">
           <div className="max-w-2xl space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 text-xs font-semibold">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Clean Slate Ready • Add Your Details</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 text-xs font-bold">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Blank Slate Ready • Follow 3 Simple Steps</span>
             </div>
 
-            <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              Ready to Track Your Layoff Survival Runway?
+            <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              Calculate Your Layoff Survival Runway
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              Your financial data has been cleared. Follow these 2 easy steps to calculate how many days and months your remaining money will last:
+              Find out exactly how many days and months your remaining money will last without an active salary. Start by entering your accounts and budget:
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
               <button
                 onClick={() => {
                   setActiveTab('accounts');
                   onOpenAddAccount();
                 }}
-                className="p-4 bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-2xl flex items-center gap-3.5 text-left transition group shadow-sm"
+                className="p-4 bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-2xl flex flex-col justify-between text-left transition group shadow-sm hover:shadow"
               >
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mb-3 group-hover:scale-105 transition">
                   <Wallet className="w-5 h-5" />
                 </div>
                 <div>
-                  <strong className="block text-xs sm:text-sm text-slate-900 dark:text-white font-bold">1. Add Bank Accounts & Cash</strong>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Save PNB, HDFC, SBI, or Cash in hand</span>
+                  <strong className="block text-xs sm:text-sm text-slate-900 dark:text-white font-bold">1. Add Capital</strong>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Bank accounts & cash in hand</span>
                 </div>
               </button>
 
               <button
                 onClick={() => setActiveTab('budget')}
-                className="p-4 bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-2xl flex items-center gap-3.5 text-left transition group shadow-sm"
+                className="p-4 bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-2xl flex flex-col justify-between text-left transition group shadow-sm hover:shadow"
               >
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mb-3 group-hover:scale-105 transition">
                   <CreditCard className="w-5 h-5" />
                 </div>
                 <div>
-                  <strong className="block text-xs sm:text-sm text-slate-900 dark:text-white font-bold">2. Declare Monthly Budget</strong>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Set Rent, Groceries, Gas, & Bills</span>
+                  <strong className="block text-xs sm:text-sm text-slate-900 dark:text-white font-bold">2. Set Budget</strong>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Rent, food & essential bills</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab('expenses');
+                  onOpenAddExpense();
+                }}
+                className="p-4 bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-2xl flex flex-col justify-between text-left transition group shadow-sm hover:shadow"
+              >
+                <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 mb-3 group-hover:scale-105 transition">
+                  <PlusCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <strong className="block text-xs sm:text-sm text-slate-900 dark:text-white font-bold">3. Track Daily Spend</strong>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Deduct expenses on the go</span>
                 </div>
               </button>
             </div>
           </div>
         </div>
       ) : (
-        /* Hero Survival Runway Banner (Soothing, Eye-Friendly Design) */
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-50/90 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 border border-indigo-100 dark:border-slate-800 p-4 sm:p-8 shadow-sm w-full max-w-full">
-          <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 min-w-0 w-full">
-            <div className="space-y-3 max-w-xl min-w-0 w-full">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/40 text-xs font-semibold">
-                <Clock className="w-3.5 h-3.5 shrink-0" />
-                <span>Job Search Emergency Runway</span>
+        /* 2. Hero Survival Runway Master Card */
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-50/90 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/40 border border-indigo-100 dark:border-slate-800 p-5 sm:p-8 shadow-sm">
+          <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 w-full">
+            <div className="space-y-3 max-w-xl">
+              {/* Status Indicator Chip */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+                  isHealthyRunway
+                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40'
+                    : isModerateRunway
+                    ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/40'
+                    : 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/40'
+                }`}>
+                  {isHealthyRunway ? <ShieldCheck className="w-3.5 h-3.5" /> : isModerateRunway ? <Zap className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                  <span>
+                    {isHealthyRunway ? 'Safe Runway (6+ Months)' : isModerateRunway ? 'Moderate Runway (3-6 Months)' : 'Urgent Runway (<3 Months)'}
+                  </span>
+                </span>
+
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Until <strong className="text-slate-900 dark:text-white font-bold">{survivalAnalysis.runwayDate}</strong>
+                </span>
               </div>
 
-              <h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight break-words">
-                You have <span className="text-indigo-600 dark:text-amber-400">{survivalAnalysis.monthsRemaining} months {survivalAnalysis.daysRemaining} days</span> of survival runway left
+              {/* Main Headline */}
+              <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                <span className="text-indigo-600 dark:text-indigo-400">
+                  {survivalAnalysis.monthsRemaining} Months {survivalAnalysis.daysRemaining} Days
+                </span>{' '}
+                of survival runway
               </h1>
 
-              <p className="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed break-words">
-                Based on your declared monthly burn rate ({formatCurrency(survivalAnalysis.monthlyBurnRate)}/mo), your liquid capital of <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{formatCurrency(survivalAnalysis.totalCapital)}</strong> will last until{' '}
-                <span className="font-semibold text-slate-900 dark:text-white underline decoration-indigo-400 dark:decoration-amber-400 underline-offset-4">
-                  {survivalAnalysis.runwayDate}
-                </span>.
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                At your declared burn rate of <strong className="text-slate-900 dark:text-white font-bold">{formatCurrency(survivalAnalysis.monthlyBurnRate)}/mo</strong>, your liquid capital of <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{formatCurrency(survivalAnalysis.totalCapital)}</strong> guarantees your finances through <span className="font-semibold text-slate-900 dark:text-white underline decoration-indigo-400 underline-offset-4">{survivalAnalysis.runwayDate}</span>.
               </p>
             </div>
 
-            {/* Quick Metrics Badge Card */}
-            <div className="w-full lg:w-auto bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row lg:flex-col gap-4 sm:min-w-[280px]">
-              {/* Essential Only Mode */}
+            {/* Quick Metrics & Essential Lean Comparison */}
+            <div className="w-full lg:w-auto bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col gap-3.5 lg:min-w-[300px]">
+              {/* Essential Lean Mode */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1 font-medium">
+                  <span className="text-slate-600 dark:text-slate-400 font-semibold flex items-center gap-1.5">
                     <ShieldAlert className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    Strict Lean Survival:
+                    Strict Lean Mode (Essentials):
                   </span>
                   <span className="text-emerald-600 dark:text-emerald-400 font-bold">
                     {survivalAnalysis.essentialMonthsRemaining}m {survivalAnalysis.essentialDaysRemaining}d
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Cutting non-essentials extends your money until <strong className="text-slate-800 dark:text-slate-200">{survivalAnalysis.runwayDateEssential}</strong>.
+                  Cutting non-essentials buys you time until <strong className="text-slate-800 dark:text-slate-200">{survivalAnalysis.runwayDateEssential}</strong>.
                 </p>
               </div>
 
               <div className="h-px bg-slate-100 dark:bg-slate-700" />
 
-              {/* Quick Actions */}
+              {/* Action Buttons */}
               <div className="flex items-center gap-2">
                 <button
-                  onClick={onOpenSimulator}
-                  className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition shadow-sm"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Simulator</span>
-                </button>
-                <button
                   onClick={onOpenAddExpense}
-                  className="flex-1 py-2 px-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-650 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition border border-slate-200 dark:border-slate-600"
+                  className="flex-1 py-2.5 px-3 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition shadow-sm"
                 >
-                  <PlusCircle className="w-3.5 h-3.5 text-indigo-600 dark:text-amber-400" />
+                  <PlusCircle className="w-3.5 h-3.5" />
                   <span>Add Expense</span>
+                </button>
+
+                <button
+                  onClick={onOpenSimulator}
+                  className="flex-1 py-2.5 px-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-650 active:scale-[0.98] text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition border border-slate-200 dark:border-slate-600"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+                  <span>Simulator</span>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Layoff Actionable Insights */}
+          {/* Actionable Insights Strip */}
           {survivalAnalysis.totalReceivables > 0 && (
-            <div className="mt-6 pt-4 border-t border-indigo-100 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs bg-indigo-50/40 dark:bg-slate-800/40 -mx-4 sm:-mx-8 -mb-4 sm:-mb-8 px-4 sm:px-8 py-3.5">
+            <div className="mt-6 pt-4 border-t border-indigo-100 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs bg-indigo-50/50 dark:bg-slate-800/40 -mx-5 sm:-mx-8 -mb-5 sm:-mb-8 px-5 sm:px-8 py-3.5">
               <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                 <HeartHandshake className="w-4 h-4 text-amber-500 shrink-0" />
                 <span>
-                  <strong>Actionable Opportunity:</strong> You have lent <strong>{formatCurrency(survivalAnalysis.totalReceivables)}</strong> to others. Recovering this will extend your runway by <strong className="text-indigo-600 dark:text-amber-300 font-bold">+{receivableRunwayGainDays} days</strong>!
+                  <strong>Runway Extension Opportunity:</strong> You have lent <strong>{formatCurrency(survivalAnalysis.totalReceivables)}</strong>. Recovering it will extend your runway by <strong className="text-indigo-600 dark:text-amber-300 font-bold">+{receivableRunwayGainDays} days</strong>!
                 </span>
               </div>
               <button
                 onClick={() => setActiveTab('lent')}
-                className="text-indigo-600 dark:text-amber-400 hover:underline font-semibold flex items-center gap-1 whitespace-nowrap"
+                className="text-indigo-600 dark:text-amber-400 hover:underline font-bold flex items-center gap-1 whitespace-nowrap"
               >
-                View Receivables →
+                Collect Money →
               </button>
             </div>
           )}
         </div>
       )}
 
-      {/* 4 Financial Pillar Summary Cards (Clean, Soothing Pastels) */}
+      {/* 3. Four Core Financial Pillar Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* 1. Total Liquid Capital */}
+        {/* 1. Capital */}
         <div 
           onClick={() => setActiveTab('accounts')} 
-          className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 rounded-3xl p-5 cursor-pointer transition-all duration-200 group shadow-sm hover:shadow"
+          className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-600 rounded-3xl p-5 cursor-pointer transition-all duration-200 group shadow-sm hover:shadow"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Total Liquid Capital</span>
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-105 transition">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Liquid Capital</span>
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-105 transition">
               <Wallet className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             {formatCurrency(survivalAnalysis.totalCapital)}
           </div>
           <div className="flex items-center justify-between mt-3 text-xs text-slate-500 dark:text-slate-400">
-            <span>{accounts.length} Accounts (PNB, HDFC, Cash)</span>
-            <span className="text-emerald-600 dark:text-emerald-400 group-hover:underline flex items-center gap-0.5 font-medium">
+            <span>{accounts.length} Accounts & Cash</span>
+            <span className="text-emerald-600 dark:text-emerald-400 group-hover:underline flex items-center gap-0.5 font-semibold">
               Manage <ArrowUpRight className="w-3 h-3" />
             </span>
           </div>
         </div>
 
-        {/* 2. Monthly Burn Rate */}
+        {/* 2. Monthly Burn */}
         <div 
           onClick={() => setActiveTab('budget')} 
-          className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700 rounded-3xl p-5 cursor-pointer transition-all duration-200 group shadow-sm hover:shadow"
+          className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-rose-400 dark:hover:border-rose-600 rounded-3xl p-5 cursor-pointer transition-all duration-200 group shadow-sm hover:shadow"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Monthly Burn Rate</span>
-            <div className="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center group-hover:scale-105 transition">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Monthly Burn Rate</span>
+            <div className="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center group-hover:scale-105 transition">
               <TrendingDown className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             {formatCurrency(survivalAnalysis.monthlyBurnRate)}
             <span className="text-xs font-normal text-slate-500 dark:text-slate-400 ml-1">/mo</span>
           </div>
           <div className="flex items-center justify-between mt-3 text-xs text-slate-500 dark:text-slate-400">
             <span>Daily: ~{formatCurrency(Math.round(survivalAnalysis.monthlyBurnRate / 30))}/day</span>
-            <span className="text-rose-600 dark:text-rose-400 group-hover:underline flex items-center gap-0.5 font-medium">
+            <span className="text-rose-600 dark:text-rose-400 group-hover:underline flex items-center gap-0.5 font-semibold">
               Adjust <ArrowUpRight className="w-3 h-3" />
             </span>
           </div>
         </div>
 
-        {/* 3. Money Lent (Receivables) */}
+        {/* 3. Receivables */}
         <div 
           onClick={() => setActiveTab('lent')} 
-          className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700 rounded-3xl p-5 cursor-pointer transition-all duration-200 group shadow-sm hover:shadow"
+          className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-600 rounded-3xl p-5 cursor-pointer transition-all duration-200 group shadow-sm hover:shadow"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Money Lent (Receivables)</span>
-            <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-105 transition">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Money Lent (Receivables)</span>
+            <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-105 transition">
               <HandCoins className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             {formatCurrency(survivalAnalysis.totalReceivables)}
           </div>
           <div className="flex items-center justify-between mt-3 text-xs text-slate-500 dark:text-slate-400">
             <span>{moneyLent.filter(m => m.status !== 'fully_settled').length} Active Borrowers</span>
-            <span className="text-amber-600 dark:text-amber-400 group-hover:underline flex items-center gap-0.5 font-medium">
+            <span className="text-amber-600 dark:text-amber-400 group-hover:underline flex items-center gap-0.5 font-semibold">
               Recover <ArrowUpRight className="w-3 h-3" />
             </span>
           </div>
         </div>
 
-        {/* 4. Total Debts & Loans (Payables) */}
+        {/* 4. Debts */}
         <div 
           onClick={() => setActiveTab('debts')} 
-          className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-700 rounded-3xl p-5 cursor-pointer transition-all duration-200 group shadow-sm hover:shadow"
+          className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-purple-400 dark:hover:border-purple-600 rounded-3xl p-5 cursor-pointer transition-all duration-200 group shadow-sm hover:shadow"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Debts & Loans (Payables)</span>
-            <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center group-hover:scale-105 transition">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Debts & EMIs (Payables)</span>
+            <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center group-hover:scale-105 transition">
               <CreditCard className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             {formatCurrency(survivalAnalysis.totalPayables)}
           </div>
           <div className="flex items-center justify-between mt-3 text-xs text-slate-500 dark:text-slate-400">
-            <span>{debts.filter(d => d.status !== 'closed').length} Active Loans</span>
-            <span className="text-purple-600 dark:text-purple-400 group-hover:underline flex items-center gap-0.5 font-medium">
+            <span>{debts.filter(d => d.status !== 'closed').length} Active Liabilities</span>
+            <span className="text-purple-600 dark:text-purple-400 group-hover:underline flex items-center gap-0.5 font-semibold">
               View EMIs <ArrowUpRight className="w-3 h-3" />
             </span>
           </div>
         </div>
       </div>
 
-      {/* Main Content Grid: Monthly Budget vs Actual & Recent Daily Expenses */}
+      {/* 4. Main Spending Progress & Recent Expenses Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Monthly Planned vs Actual Spend Progress */}
+        {/* Left 2 Cols: Monthly Spending Progress */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <span>Month Spending Progress ({selectedMonth})</span>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                Spending Progress • {selectedMonth}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Declared Budget vs Actual Daily Spend Tracked
+                Live comparison of daily expenses recorded against your declared budget
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -309,41 +360,54 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </span>
             </div>
 
-            <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/80 dark:border-slate-700">
+            <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/80 dark:border-slate-700">
               <div 
                 className={`h-full rounded-full transition-all duration-500 ${
                   budgetUtilization > 90 ? 'bg-rose-500' :
                   budgetUtilization > 75 ? 'bg-amber-500' : 'bg-indigo-600'
                 }`}
-                style={{ width: `${budgetUtilization}%` }}
+                style={{ width: `${Math.min(100, budgetUtilization)}%` }}
               />
             </div>
 
-            <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-              <span>
-                Remaining Budget This Month: <strong className="text-emerald-600 dark:text-emerald-400 font-semibold">{formatCurrency(Math.max(0, survivalAnalysis.monthlyBurnRate - survivalAnalysis.actualSpentThisMonth))}</strong>
-              </span>
-              <span>
-                {budgetUtilization > 100 ? (
-                  <span className="text-rose-600 dark:text-rose-400 font-semibold">⚠️ Exceeded declared budget!</span>
-                ) : (
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">Within declared budget limits</span>
-                )}
-              </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800/80">
+                <span className="text-[11px] text-slate-500 block">Remaining Monthly Budget:</span>
+                <strong className="text-emerald-600 dark:text-emerald-400 text-sm font-bold">
+                  {formatCurrency(remainingBudget)}
+                </strong>
+              </div>
+
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800/80">
+                <span className="text-[11px] text-slate-500 block">Recommended Daily Spend:</span>
+                <strong className="text-indigo-600 dark:text-indigo-400 text-sm font-bold">
+                  ~{formatCurrency(safeDailyAllowance)}/day
+                </strong>
+                <span className="text-[10px] text-slate-400 ml-1">({remainingDaysInMonth} days left)</span>
+              </div>
             </div>
           </div>
 
           {/* Bank Accounts Distribution Preview */}
           <div className="pt-2">
-            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
-              Liquid Bank Accounts & Balances
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Bank Accounts & Cash Reserves
+              </h3>
+              <button 
+                onClick={() => setActiveTab('accounts')}
+                className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-semibold"
+              >
+                All Accounts →
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {accounts.map(acc => (
                 <div key={acc.id} className="p-3.5 bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 rounded-2xl space-y-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-slate-800 dark:text-white truncate">{acc.bankName}</span>
-                    <span className="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 px-1.5 py-0.5 bg-white dark:bg-slate-700 border border-slate-200/60 dark:border-transparent rounded">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 px-1.5 py-0.5 bg-white dark:bg-slate-700 border border-slate-200/60 dark:border-transparent rounded-lg">
                       {acc.accountType}
                     </span>
                   </div>
@@ -352,7 +416,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   {acc.accountNumberLast4 && (
                     <div className="text-[10px] text-slate-400">
-                      Account ending: •••• {acc.accountNumberLast4}
+                      •••• {acc.accountNumberLast4}
                     </div>
                   )}
                 </div>
@@ -409,18 +473,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {/* Layoff Checklist */}
           <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs">
             <h4 className="font-bold text-slate-800 dark:text-slate-300">💡 Layoff Survival Checklist:</h4>
-            <ul className="space-y-1.5 text-slate-600 dark:text-slate-400 text-[11px]">
-              <li className="flex items-center gap-1.5">
+            <ul className="space-y-2 text-slate-600 dark:text-slate-400 text-[11px]">
+              <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                <span>Pause unused subscriptions & streaming apps</span>
+                <span>Pause non-essential gym & streaming subscriptions</span>
               </li>
-              <li className="flex items-center gap-1.5">
+              <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                <span>Politely follow up on pending money lent</span>
+                <span>Follow up on money lent to friends / colleagues</span>
               </li>
-              <li className="flex items-center gap-1.5">
+              <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                <span>Request rent or EMI restructuring if necessary</span>
+                <span>Explore moratorium or EMI restructuring with banks</span>
               </li>
             </ul>
           </div>
